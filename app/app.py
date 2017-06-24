@@ -1,6 +1,8 @@
 import os
 import json
 import config
+#import youtube_dl
+import urllib.request
 from flask import Flask, render_template, request, url_for, redirect
 from werkzeug.utils import secure_filename
 
@@ -20,7 +22,7 @@ DATA_FILE = ASSETS + 'runningData.txt'
 RESULTS_FILE = ASSETS + 'finalPrediction.txt'
 LOG_FILE = ASSETS + 'EmoAIlog.log'
 ENDPOINTS = ['index','Input','Progress', 'Prediction', 'PastRuns']
-ALLOWED_EXTENSIONS = set([])
+ALLOWED_EXTENSIONS = set(['mp4'])
 
 #######################################
 # Configuration
@@ -56,7 +58,6 @@ if os.path.isdir(ASSETS) is False:
 #######################################
 # Routing
 #######################################
-
 @app.route('/', methods=['GET','POST'])
 def index():
     '''
@@ -273,6 +274,14 @@ def downloadVideo(videoURL):
     log('Downloading ' + videoURL + ' and saving as video.mp4')
 
     downloadedVideo = VIDEO_UPLOAD_FOLDER + 'video.mp4'
+
+    # Download the video
+    #ydl_opts = {}
+    #with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        #ydl.download([videoURL])
+
+
+    #urllib.request.urlretrieve(videoURL, downloadedVideo)
 
     return downloadedVideo
 
