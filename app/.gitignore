@@ -1,0 +1,8 @@
+*.pyc
+*.zip
+__pycache__
+static/AudioFiles/*
+static/Plots/*
+static/Prediction/*
+static/VideoFiles/*
+static/VideoFrames/*
