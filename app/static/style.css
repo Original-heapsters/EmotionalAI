@@ -1,0 +1,30 @@
+#header {
+    background-color: white;
+    color: #B5E61D;
+    text-align: left;
+    padding: 5px;
+}
+
+#nav {
+    line-height: 30px;
+    background-color: #000;
+    height: 300px;
+    width: 10%;
+    float: left;
+    padding: 5px;
+}
+
+#section {
+    width: 1080px;
+    float: left;
+    padding: 10px;
+    background-color: #EBEDEF;
+}
+
+#footer {
+    background-color: black;
+    color: white;
+    clear: both;
+    text-align: center;
+    padding: 5px;
+}

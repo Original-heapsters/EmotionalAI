@@ -1,0 +1,30 @@
+{% extends "layout.html" %} {% block body %}
+
+<h1>Input</h1>
+
+<form method="post" action="{{ url_for('Input') }}" enctype=multipart/form-data>
+    <table>
+        <tr>
+            <td>
+                URL
+            </td>
+            <td>
+                <input type="text" name="URLInput">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Video
+            </td>
+            <td>
+                <input type="file" name="VideoInput">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input type="submit" value="Submit">
+            </td>
+        </tr>
+    </table>
+</form>
+{% endblock %}

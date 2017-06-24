@@ -1,0 +1,8 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h1>Index</h1>
+  {% for endpoint in ENDPOINTS %}
+    <a class="w3-bar-item w3-button" href="{{ url_for(endpoint) }}">{{ endpoint }}</a>
+    <br>
+  {% endfor %}
+{% endblock %}

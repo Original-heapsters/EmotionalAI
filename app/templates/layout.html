@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+    <title>ZipRecruiterHack</title>
+    <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+</head>
+<body style="background-color:#EBEDEF">
+    <div id="header">
+        <img href="{{ url_for('index') }}" src="{{ url_for('static', filename='Assets/header.png')}}" style="width:100%;">
+    </div>
+    <div class="w3-sidebar w3-black w3-bar-block" style="width:15%">
+        <img href="{{ url_for('index') }}" src="{{ url_for('static', filename='Assets/profile.png')}}" style="width:100%;">
+        <a class="w3-bar-item w3-button" href="{{ url_for('index') }}" class="">Dashboard</a>
+        <a class="w3-bar-item w3-button" href="{{ url_for('Input') }}" class="">Input</a>
+        <a class="w3-bar-item w3-button" href="{{ url_for('Progress') }}" class="">Progress</a>
+        <a class="w3-bar-item w3-button" href="{{ url_for('Prediction') }}" class="">Prediction</a>
+        <a class="w3-bar-item w3-button" href="{{ url_for('PastRuns') }}" class="">Past Runs</a>
+    </div>
+    <div style="margin-left:17%">
+        <center>
+            {% block body %}{% endblock %}
+        </center>
+    </div>
+</body>
+<html>

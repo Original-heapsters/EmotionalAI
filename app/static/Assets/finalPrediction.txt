@@ -1,0 +1,2 @@
+happy,sad,angry,frustrated
+.89,.12,.05,.01
