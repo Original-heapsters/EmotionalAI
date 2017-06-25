@@ -37,7 +37,8 @@ class VideoOperations:
         cmd = 'ffmpeg -i ' + self.inputVideo + '  '+self.outputPath+'$filename%04d.jpg'
         os.system(cmd)
 
-        os.remove(self.outputAudio + 'audio.wav')
+        if os.path.exists(self.outputAudio + 'audio.wav'):
+            os.remove(self.outputAudio + 'audio.wav')
         cmd2 = 'ffmpeg -i ' + self.inputVideo + ' ' + self.outputAudio + 'audio.wav'
         os.system(cmd2)
         #import pdb; pdb.set_trace()
