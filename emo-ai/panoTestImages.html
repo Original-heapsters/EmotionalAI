@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+  <meta content="utf-8" http-equiv="encoding">
+    <title>Deep Sense - Emotional Ai</title>
+    <link href="http://fonts.googleapis.com/css?family=Raleway:200,300" rel="stylesheet" type="text/css" />
+<link href="Sound-Visualizer/css/stylesheet2.css" rel="stylesheet" type="text/css" />
+    <style>
+      html, body {
+        padding: 0;
+        margin: 0;
+        overflow: hidden;
+      }
+
+	#link {
+		position: absolute;
+		top: 0px; width: 100%;
+		color: #ffffff;
+		padding: 5px;
+		font-family:Monospace;
+		font-size:13px;
+		font-weight: bold;
+		text-align:center;
+	}
+	a {
+		color: #ffffff;
+	}
+    </style>
+  </head>
+
+  <body>
+  <div id="container"></div>
+  <div id="link">
+  <h1>DEEP SENSE</h1>
+  <h2>Emotional Ai</h2>
+  <h3>SD Ai Hackathon</h3>
+	<a href="#">Link</a> | <a href="#">Link</a> | <a href="#">Link</a>
+<!-- 	<button onclick="femoji_anger()">anger</button>
+
+	<button onclick="femoji_anticipation()" href="javascript:void(0);">anticipation</button>
+
+	<button onclick="femoji_fear()" href="javascript:void(0);">fear</button> -->
+
+</div>
+  <div id="info">Loading music<span id="loading_dots"></span></div>
+  <script src="Sound-Visualizer/js/three.js"></script>
+  <script src="Sound-Visualizer/js/jquery-3.1.1.min.js"></script>
+  <script src="Sound-Visualizer/js/OrbitControls.js"></script> 
+  <script src="Sound-Visualizer/js/STLLoader.js"></script> 
+  <script type="text/javascript" src="Sound-Visualizer/js/Nighttime.js"></script>
+  <script>
+      var SAMPLE = (function() {
+
+        // create and set up the scene, etc
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(35, width / height, 1, 1500);
+        var renderer = new THREE.WebGLRenderer({antialias:true});
+        var time = 0;
+        var ORIGIN = new THREE.Vector3();
+        var orbitControls, material, mesh, centerPivotPoint, moonPivotPoint, steps, textpivot;
+        var objects = [];
+        //var cubeImages = new Array();
+        var cubeImages = [];
+        var cubeImages2 = [];
+        var cubeImages3 = [];
+
+        var scaleSphere;
+        var emoji_anger, emoji_anticipation, emoji_fear, emoji_disgust, emoji_joy, emoji_sadness, emoji_surprise, emoji_trust;
+
+        // ------ add orbit controls ------ 
+        orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+        //orbitControls.addEventListener('change', render);
+        orbitControls.enableDamping = true;
+        orbitControls.dampingFactor = 0.25;
+        orbitControls.enableZoom = true;
+        orbitControls.autoRotate = true;
+        // ------ end orbit controls ------ 
+
+        camera.position.y = 50; // view from the top for perspective and top angle
+        camera.position.z = 500; // view out from the screen
+
+        var spotLight = new THREE.SpotLight(0xffffff);
+        spotLight.position.set(40, 40, 40);
+        spotLight.castShadow = true;
+        scene.add(spotLight);
+
+        // urls of the images,
+        // one per half axis
+        var urls = [
+              'Sound-Visualizer/images/mountain-360/pos-x.png',
+              'Sound-Visualizer/images/mountain-360/neg-x.png',
+              'Sound-Visualizer/images/mountain-360/pos-y.png',
+              'Sound-Visualizer/images/mountain-360/neg-y.png',
+              'Sound-Visualizer/images/mountain-360/pos-z.png',
+              'Sound-Visualizer/images/mountain-360/neg-z.png'
+            ];
+
+        // wrap it up into the object that we need
+        var cubemap = THREE.ImageUtils.loadTextureCube(urls);
+
+        // set the format, likely RGB
+        // unless you've gone crazy
+        cubemap.format = THREE.RGBFormat;
+
+        // following code from https://github.com/mrdoob/three.js/blob/master/examples/webgl_materials_cubemap.html
+        var shader = THREE.ShaderLib[ "cube" ];
+        shader.uniforms[ "tCube" ].texture = cubemap;
+
+        var material = new THREE.ShaderMaterial( {
+          fragmentShader: shader.fragmentShader,
+          vertexShader: shader.vertexShader,
+          uniforms: shader.uniforms,
+          depthWrite: false,
+          side: THREE.BackSide
+
+        });
+
+        var geometry = new THREE.CubeGeometry( 3, 8, 10 );
+        //constructor var bigSphereGeometry = new THREE.SphereGeometry( 60, 100, 100 );
+
+        var SphereGeometrySmaller = new THREE.SphereGeometry( 5, 32, 32 ); //water - wide
+        //constructor SphereGeometry(radius, widthSegments, heightSegments, phiStart, phiLength, thetaStart, thetaLength)
+
+        var TorusKnotGeometry = new THREE.TorusKnotGeometry( 10, 3, 100, 16 );
+        //TorusKnotGeometry(radius, tube, tubularSegments, radialSegments, p, q)
+
+        var TorusGeometry = new THREE.TorusGeometry( 15, 1, 16, 100 );
+        //TorusGeometry(radius, tube, radialSegments, tubularSegments, arc)
+
+        var SphereGeometryBigger = new THREE.SphereGeometry( 10, 40, 40 );//container - tall
+
+        var waterTexture  = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/water.jpg' );
+        var waterMaterial = new THREE.MeshBasicMaterial( { 
+          map: waterTexture,
+          opacity:0.5
+        });
+
+        var goldTexture  = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/gold.jpg' );
+        var goldMaterial = new THREE.MeshBasicMaterial( { 
+          map: goldTexture,
+          opacity:0.5
+        });
+
+        var moonTexture  = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/moon.png' );
+        var moonMaterial = new THREE.MeshBasicMaterial( { 
+          map: moonTexture,
+          opacity:.9
+        });
+
+        var emoji_angerTexture  = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/emojis/anger.jpg' );
+        var emoji_angerMaterial = new THREE.MeshBasicMaterial( { 
+          map: emoji_angerTexture,
+          opacity:0.5
+        });
+        
+        var emoji_anticipationTexture  = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/emojis/anticipation.jpg' );
+        var emoji_anticipationMaterial = new THREE.MeshBasicMaterial( { 
+          map: emoji_anticipationTexture,
+          opacity:0.5
+        });
+        
+        var emoji_fearTexture  = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/emojis/fear.jpg' );
+        var emoji_fearMaterial = new THREE.MeshBasicMaterial( { 
+          map: emoji_fearTexture,
+          opacity:0.5
+        });
+
+        var emoji_disgustTexture  = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/emojis/disgust.jpg' );
+        var emoji_disgustMaterial = new THREE.MeshBasicMaterial( { 
+          map: emoji_disgustTexture,
+          opacity:0.5
+        });
+
+        var emoji_joyTexture  = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/emojis/joy.jpg' );
+        var emoji_joyMaterial = new THREE.MeshBasicMaterial( { 
+          map: emoji_joyTexture,
+          opacity:0.5
+        });
+
+        var emoji_sadnessTexture  = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/emojis/sadness.jpg' );
+        var emoji_sadnessMaterial = new THREE.MeshBasicMaterial( { 
+          map: emoji_sadnessTexture,
+          opacity:0.5
+        });
+
+        var emoji_surpriseTexture  = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/emojis/surprise.jpg' );
+        var emoji_surpriseMaterial = new THREE.MeshBasicMaterial( { 
+          map: emoji_surpriseTexture,
+          opacity:0.5
+        });
+
+        var emoji_trustTexture  = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/emojis/trust.jpg' );
+        var emoji_trustMaterial = new THREE.MeshBasicMaterial( { 
+          map: emoji_trustTexture,
+          opacity:0.5
+        });
+        
+        // test images on the flat cube geometries
+        // var imageTexture  = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/imageTest.jpg' );
+        // var imageMaterial = new THREE.MeshBasicMaterial( { 
+        //   map: imageTexture,
+        //   opacity:0.5
+        // });
+
+        //array of iphone images "image1.JPG, image2.JPG, image3.JPG... etc..."
+        //resize images to a width of 1000 for the page to load faster
+        var imageTexture=[]; 
+        var imageMaterial =[];
+        for(var x=0;x<=9;x++){
+          imageTexture[x] = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/anger-video/5WaysToAnnoyYourMother-000'+x+'.JPG' );
+          imageMaterial[x]= new THREE.MeshBasicMaterial( { 
+            map: imageTexture[x],
+            opacity:0.9
+          });
+        }
+        for(var x=10;x<=39;x++){
+          imageTexture[x] = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/anger-video/5WaysToAnnoyYourMother-00'+x+'.JPG' );
+          imageMaterial[x]= new THREE.MeshBasicMaterial( { 
+            map: imageTexture[x],
+            opacity:0.9
+          });
+        }
+
+        var imageTexture2=[]; 
+        var imageMaterial2 =[];
+        for(var x=0;x<=9;x++){
+          imageTexture2[x] = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/anger-both/5WaysToAnnoyYourMother-000'+x+'.JPG' );
+          imageMaterial2[x]= new THREE.MeshBasicMaterial( { 
+            map: imageTexture2[x],
+            opacity:0.9
+          });
+        }
+        for(var x=10;x<=39;x++){
+          imageTexture2[x] = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/anger-both/5WaysToAnnoyYourMother-00'+x+'.JPG' );
+          imageMaterial2[x]= new THREE.MeshBasicMaterial( { 
+            map: imageTexture2[x],
+            opacity:0.9
+          });
+        }
+
+        var imageTexture3=[]; 
+        var imageMaterial3 =[];
+        for(var x=0;x<=9;x++){
+          imageTexture3[x] = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/anger-audio/5WaysToAnnoyYourMother-000'+x+'.JPG' );
+          imageMaterial3[x]= new THREE.MeshBasicMaterial( { 
+            map: imageTexture3[x],
+            opacity:0.9
+          });
+        }
+        for(var x=10;x<=39;x++){
+          imageTexture3[x] = THREE.ImageUtils.loadTexture( 'Sound-Visualizer/images/anger-audio/5WaysToAnnoyYourMother-00'+x+'.JPG' );
+          imageMaterial3[x]= new THREE.MeshBasicMaterial( { 
+            map: imageTexture3[x],
+            opacity:0.9
+          });
+        }
+
+        var reflectionMaterial = new THREE.MeshBasicMaterial({
+          color: 0xcccccc,
+          envMap: cubemap,
+         
+        });
+
+        var reflectionMaterial2 = new THREE.MeshLambertMaterial({
+           color: 0x00AAFF, 
+           shininess: 30, 
+           specular: 0x111111,  
+           opacity:0.5
+        });
+
+        //needs to be set to true in order for the opacity levels to work
+        reflectionMaterial2.transparent = true;
+        waterMaterial.transparent = true;
+        goldMaterial.transparent = true;
+        moonMaterial.transparent = true;
+        imageMaterial.transparent=true;
+        var skybox = new THREE.Mesh( new THREE.CubeGeometry( 1000, 1000, 1000 ), material );
+
+        //add lights to the scene
+        var ambient = new THREE.AmbientLight( 0xffffff );
+        scene.add(ambient);
+
+        var pointLight = new THREE.PointLight( 0xffffff, 2 );
+        scene.add( pointLight );
+
+        var dirLight = new THREE.DirectionalLight();
+        dirLight.position.set(15, 10, -5);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        var dirLight2 = new THREE.DirectionalLight();
+        dirLight2.position.set(-15, 10, -5);
+        dirLight2.castShadow = true;
+        scene.add(dirLight2);
+        //end add lights to the scene
+
+        //create meshes for the scene.
+        //each mesh has a geometry and a mesh
+        var SphereMeshSmaller2 = new THREE.Mesh( 
+          SphereGeometrySmaller,
+          waterMaterial 
+        );
+        var SphereMeshSmaller = new THREE.Mesh( 
+          SphereGeometrySmaller, 
+          waterMaterial
+        );
+        var TorusKnotMesh = new THREE.Mesh( 
+          TorusKnotGeometry,
+          waterMaterial
+        );
+
+        SphereMeshSmaller2.position.set(-50, -50, 50);
+        SphereMeshSmaller.position.set(50, -50, -50);
+        TorusKnotMesh.position.set(0, -50, 0);
+
+        // code for bottom meshes -----
+
+        var SphereMeshSmaller3 = new THREE.Mesh( 
+          SphereGeometrySmaller, 
+          reflectionMaterial
+        );
+        var TorusMesh = new THREE.Mesh( 
+          SphereGeometrySmaller, 
+          reflectionMaterial
+        );
+
+        var SphereMeshBigger = new THREE.Mesh( 
+          SphereGeometryBigger, 
+          moonMaterial
+        );
+
+        SphereMeshSmaller3.position.set(50, -50, 50);//reflective bottom
+        TorusMesh.position.set(-50, -50, -50);//reflective bottom
+        // end code for bottom meshes -----
+
+        // code for top cylinders -----
+
+        var TorusMesh3 = new THREE.Mesh( 
+          TorusGeometry, //taller and skinnier
+          reflectionMaterial2
+        );
+        var TorusMesh4 = new THREE.Mesh( 
+          TorusGeometry, //taller and skinnier
+          reflectionMaterial2
+        );
+
+        //big moon on top
+        var SphereMeshBigger2 = new THREE.Mesh( 
+          SphereGeometryBigger, //taller and skinnier
+          moonMaterial
+        );
+
+        TorusMesh3.position.set(-50, 0, 50);//white
+        TorusMesh3.rotation.y=.8;//white
+        
+        TorusMesh4.position.set(50, 0, -50);//white
+        TorusMesh4.rotation.y=.8;//white
+        SphereMeshBigger2.position.set(-150, 10, -150);
+
+        SphereMeshSmaller2.castShadow = true;
+        SphereMeshSmaller2.receiveShadow = true;
+     
+        SphereMeshSmaller.castShadow = true;
+        SphereMeshSmaller.receiveShadow = true;
+
+        TorusKnotMesh.castShadow = true;
+        TorusKnotMesh.receiveShadow = true;
+     
+        SphereMeshSmaller3.castShadow = true;
+        SphereMeshSmaller3.receiveShadow = true;
+
+        TorusMesh.castShadow = true;
+        TorusMesh.receiveShadow = true;
+     
+        TorusMesh3.castShadow = true;
+        TorusMesh3.receiveShadow = true;
+     
+        TorusMesh4.castShadow = true;
+        TorusMesh4.receiveShadow = true;
+
+        SphereMeshBigger2.castShadow = true;
+        SphereMeshBigger2.receiveShadow = true;
+
+        //water
+        scene.add(SphereMeshSmaller2);
+        scene.add(SphereMeshSmaller);
+        scene.add(TorusKnotMesh);
+
+        //reflective chrome bottom
+        scene.add(SphereMeshSmaller3);
+        scene.add(TorusMesh);
+        
+        //top of the aquarium
+        scene.add(TorusMesh3);
+        scene.add(TorusMesh4);
+        scene.add(SphereMeshBigger2);
+
+        moonPivotPoint = new THREE.Object3D();
+        moonPivotPoint.position.set(0, 0, 0);
+        moonPivotPoint.add(SphereMeshBigger2);
+        scene.add(moonPivotPoint);
+       
+        scene.add(camera);
+        scene.add(skybox);
+        // scene.add(cylinder);
+        signs();
+        signsTest();
+
+        // femoji_anger();
+        // femoji_anticipation();
+        // femoji_fear();
+        // femoji_disgust();
+        // femoji_joy();
+        // femoji_sadness();
+        // femoji_surprise();
+        // femoji_trust();
+
+
+		// var loc = window.location.pathname;
+		// var dir = loc.substring(0, loc.lastIndexOf('/'));
+		// readTextFile("file://" + dir + "/finalPrediction.txt");
+		// console.log("dir: " + dir);
+
+
+        var kinkakujiLoader = new THREE.STLLoader(); // loads kinkakuji into the scene------------------
+
+        kinkakujiLoader.addEventListener( 'load', function ( event ) { 
+            
+            var geometry = event.content;
+            geometry.computeTangents();
+            mesh = new THREE.Mesh( geometry, goldMaterial );
+    
+            //mesh.position.set( -75, 65, -175);
+            // mesh.rotation.set( - Math.PI / 2, 0, 0);
+
+            mesh.scale.set( 1, 1, 1 );
+
+            //var scale = chroma.scale(['red', 'green', 'blue']);
+            //var object = event.content;
+            //setRandomColors(object, scale);
+            //mesh = object;
+            //scene.add(mesh);
+
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            objects.push(mesh);
+            scene.add( mesh );
+            //pivotPoint3.add( mesh );
+
+        } ); // end loads kinkakuji into the scene----------------------------------------------
+         kinkakujiLoader.load( 'Sound-Visualizer/models/mask_clipped.stl' );
+
+        centerPivotPoint = new THREE.Object3D();
+        centerPivotPoint.position.set(0, 0, 0);
+
+         var koiLoader = new THREE.STLLoader(); // loads koi fish into the scene------------------
+
+        koiLoader.addEventListener( 'load', function ( event ) { 
+            
+            var geometry = event.content;
+            geometry.computeTangents();
+            mesh = new THREE.Mesh( geometry, waterMaterial );
+    
+            mesh.position.set( 70, 0, 0);
+            mesh.rotation.set( - Math.PI / 2, 0, 0);
+
+            mesh.scale.set( 1, 1, 1 );
+
+            //var scale = chroma.scale(['red', 'green', 'blue']);
+            //var object = event.content;
+            //setRandomColors(object, scale);
+            //mesh = object;
+            //scene.add(mesh);
+
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.rotation.z=1.3;
+
+            objects.push(mesh);
+            scene.add( mesh );
+            centerPivotPoint.add( mesh );
+            scene.add( centerPivotPoint );
+            //pivotPoint3.add( mesh );
+
+        } ); // end loads koi fish into the scene----------------------------------------------
+         koiLoader.load( 'Sound-Visualizer/models/half-face.stl' );
+
+         var craneLoader = new THREE.STLLoader(); // loads crane into the scene------------------
+
+        craneLoader.addEventListener( 'load', function ( event ) { 
+            
+            var geometry = event.content;
+            geometry.computeTangents();
+            mesh = new THREE.Mesh( geometry, waterMaterial );
+    
+            mesh.position.set( 0, 0, 70);
+            mesh.rotation.set( - Math.PI / 2, 0, 0);
+            mesh.rotation.z=1.3;
+
+            mesh.scale.set( .2, .2, .2 );
+
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            objects.push(mesh);
+            scene.add( mesh );
+            centerPivotPoint.add( mesh );
+            scene.add( centerPivotPoint );
+            //pivotPoint3.add( mesh );
+
+        } ); // end loads crane into the scene----------------------------------------------
+         craneLoader.load( 'Sound-Visualizer/models/crane.stl' );
+
+            // pivots
+            var pivot1 = new THREE.Object3D();
+            var pivot2 = new THREE.Object3D();
+            var pivot3 = new THREE.Object3D();
+
+            pivot1.rotation.z += 0;
+            pivot2.rotation.y = 20 * Math.PI/3;
+            pivot3.rotation.y = 35 * Math.PI/3;
+
+            // mesh
+            var mesh1 = new THREE.Mesh( geometry, material );
+            var mesh2 = new THREE.Mesh( geometry, material );
+            var mesh3 = new THREE.Mesh( geometry, material );
+
+        for (var x=0; x<5; x++){ // for loop to create spheres
+
+          var sphere = new THREE.Mesh( 
+            geometry, 
+            reflectionMaterial 
+          );
+          sphere.position.set(-50*Math.random(), -50*Math.random(), 50*Math.random());
+          sphere.rotation.set(-100*Math.random(), -100*Math.random(), 100*Math.random());
+          scene.add(sphere);
+          pivot3.add( sphere );
+
+        }
+
+        for (var x=0; x<5; x++){ // for loop to create spheres
+
+          var sphere = new THREE.Mesh( 
+            geometry, 
+            reflectionMaterial 
+          );
+          sphere.position.set(50*Math.random(), -50*Math.random(), -50*Math.random());
+          sphere.rotation.set(-100*Math.random(), -100*Math.random(), 100*Math.random());
+
+          scene.add(sphere);
+          pivot2.add( sphere );
+
+        }
+
+    ////////////
+	// CUSTOM //
+	////////////
+	
+	/////// draw text on canvas /////////
+
+	// create a canvas element
+	var canvas1 = document.createElement('canvas');
+	var context1 = canvas1.getContext('2d');
+	context1.font = "Bold 40px Arial";
+	context1.fillStyle = 'rgb(' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ')';
+
+    context1.fillText('Kiwi World!', 10, 25);
+
+    textpivot = new THREE.Object3D();
+    textpivot.position.set(0, 0, 0);
+	textpivot.add( context1 );
+	scene.add( textpivot );
+
+	// canvas contents will be used for a texture
+	var texture1 = new THREE.Texture(canvas1) 
+	texture1.needsUpdate = true;
+      
+    var material1 = new THREE.MeshBasicMaterial( {map: texture1, side:THREE.DoubleSide } );
+    material1.transparent = true;
+
+    var mesh1 = new THREE.Mesh(
+        new THREE.PlaneGeometry(canvas1.width, canvas1.height),
+        material1
+      );
+	mesh1.position.set(0,50,0);
+	scene.add( mesh1 );
+	
+	/////// draw image on canvas /////////
+
+	// create a canvas element
+	var canvas2 = document.createElement('canvas');
+	var context2 = canvas2.getContext('2d');
+	// canvas contents will be used for a texture
+	var texture2 = new THREE.Texture(canvas2);
+	
+	// load an image
+	var imageObj = new Image();
+	imageObj.src = "Sound-Visualizer/images/ImageTest.jpg";
+	// after the image is loaded, this function executes
+	imageObj.onload = function()
+	{  
+		context2.drawImage(imageObj, 0, 0);
+		if ( texture2 ) // checks if texture exists
+			texture2.needsUpdate = true;
+	};  
+      
+    var material2 = new THREE.MeshBasicMaterial( {map: texture2, side:THREE.DoubleSide} );
+    material2.transparent = true;
+
+    var mesh2 = new THREE.Mesh(
+        new THREE.PlaneGeometry(canvas2.width, canvas2.height),
+        material2
+      );
+	mesh2.position.set(0,50,-50);
+	// scene.add( mesh2 );	
+
+
+
+        renderer.setSize(width, height);
+        document.body.appendChild(renderer.domElement);
+        onWindowResize();
+
+        animate()
+
+        window.addEventListener( 'resize', onWindowResize, false );
+
+        function onWindowResize( event ) {
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+      }
+
+      // all emojis
+      function femoji_anger(){
+      	var boxgeometry = new THREE.BoxGeometry( 50, 50, 2, 50 );
+
+      	// emojiImage = new THREE.TextureLoader();
+       //  emojiMaterial = emojiImage.load('Sound-Visualizer/images/imageTest.jpg');
+
+        // emojiImage.wrapS = emojiImage.wrapT = THREE.RepeatWrapping;
+		// var circlematerial = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
+		emoji_anger = new THREE.Mesh( boxgeometry, emoji_angerMaterial );
+		scene.add( emoji_anger );
+      	// emoji_anger.position.y +=0.1;
+      }
+      function femoji_anticipation(){
+      	var boxgeometry = new THREE.BoxGeometry( 50, 50, 2, 50 );
+		emoji_anticipation = new THREE.Mesh( boxgeometry, emoji_anticipationMaterial );
+		// emoji_anticipation.position.set(0,0,0);
+		scene.add( emoji_anticipation );
+      }
+      function femoji_fear(){
+      	var boxgeometry = new THREE.BoxGeometry( 50, 50, 2, 50 );
+		emoji_fear = new THREE.Mesh( boxgeometry, emoji_fearMaterial );
+		// emoji_fear.position.set(0,0,0);
+		scene.add( emoji_fear );
+      }
+      function femoji_disgust(){
+      	var boxgeometry = new THREE.BoxGeometry( 50, 50, 2, 50 );
+		emoji_disgust = new THREE.Mesh( boxgeometry, emoji_disgustMaterial );
+		// emoji_disgust.position.set(0,0,0);
+		scene.add( emoji_disgust );
+      }
+      function femoji_joy(){
+      	var boxgeometry = new THREE.BoxGeometry( 50, 50, 2, 50 );
+		emoji_joy = new THREE.Mesh( boxgeometry, emoji_joyMaterial );
+		// emoji_joy.position.set(0,0,0);
+		scene.add( emoji_joy );
+      }
+      function femoji_sadness(){
+      	var boxgeometry = new THREE.BoxGeometry( 50, 50, 2, 50 );
+		emoji_sadness = new THREE.Mesh( boxgeometry, emoji_sadnessMaterial );
+		// emoji_sadness.position.set(0,0,0);
+		scene.add( emoji_sadness );
+      }
+      function femoji_surprise(){
+      	var boxgeometry = new THREE.BoxGeometry( 50, 50, 2, 50 );
+		emoji_surprise = new THREE.Mesh( boxgeometry, emoji_surpriseMaterial );
+		// emoji_surprise.position.set(0,0,0);
+		scene.add( emoji_surprise );
+      }
+      function femoji_trust(){
+      	var boxgeometry = new THREE.BoxGeometry( 50, 50, 2, 50 );
+		emoji_trust = new THREE.Mesh( boxgeometry, emoji_trustMaterial );
+		// emoji_trust.position.set(0,0,0);
+		scene.add( emoji_trust );
+      }
+
+      
+      window.onload=function showEmoji(){
+      	var value='{{}}';
+      	value='angry';
+      	if (value == 'angry'){
+      		femoji_joy();
+      	}
+      	alert('sarah');
+
+      }
+
+      function emojimove(){
+      	emoji_anger.position.y +=0.1;
+      	emoji_anticipation.position.y +=0.2;
+      	emoji_fear.position.y +=0.3;
+      	emoji_disgust.position.y +=0.4;
+      	emoji_joy.position.y +=0.5;
+      	emoji_sadness.position.y +=0.6;
+      	emoji_surprise.position.y +=0.7;
+      	emoji_trust.position.y +=0.8;
+      }
+      // end emojis
+
+      function signs(){
+        //sign 1------------------------------------------------------------
+        signImage = new THREE.TextureLoader();
+        signMaterial = signImage.load('Sound-Visualizer/images/imageTest.jpg');
+
+        signImage.wrapS = signImage.wrapT = THREE.RepeatWrapping;
+        //signImage.repeat.set( 2, 2 ); //how many times it will repeat
+        
+        var flatGeometry = new THREE.PlaneGeometry( 1038, 605 ); //sign for welcome to aquarium
+        var boundaries = new THREE.CubeGeometry(60,60,5,5);
+
+        var surfaces; 
+
+        surfaces = new THREE.Mesh( boundaries, waterMaterial );
+        surfaces.doubleSided = true;
+        // (0,height,depth of field)  
+        surfaces.rotation.x=1.57;
+        surfaces.position.set(0,-4,0);       
+
+        scene.add(surfaces);
+        console.log("surfaces: "+ surfaces);
+      }
+
+        function signsTest(){
+          // sphere
+        
+          var vector = new THREE.Vector3();
+          var vector2 = new THREE.Vector3();
+          var vector3 = new THREE.Vector3();
+          var cubegeometry = new THREE.CubeGeometry(30, 22, 1, 1);
+              
+            for ( var i = 1, l = 40; i <= l; i ++ ) {//array of images, same geometries, array of meshes (geometries and materials)
+
+              var phi = i * 0.175 + Math.PI;
+
+              cubeImages[i] = new THREE.Mesh(cubegeometry,imageMaterial[i]);
+              cubeImages[i].doubleSided = true;
+
+              cubeImages2[i] = new THREE.Mesh(cubegeometry,imageMaterial2[i]);
+              cubeImages2[i].doubleSided = true;
+
+              cubeImages3[i] = new THREE.Mesh(cubegeometry,imageMaterial2[i]);
+              cubeImages3[i].doubleSided = true;
+
+              cubeImages[i].position.x = -150 * Math.sin( phi );
+              cubeImages[i].position.y = - ( i * 1 ) + 80;
+              cubeImages[i].position.z = -150 * Math.cos( phi );
+
+              cubeImages2[i].position.x = -150 * Math.sin( phi );
+              cubeImages2[i].position.y = - ( i * 1 ) + 0;
+              cubeImages2[i].position.z = -150 * Math.cos( phi );
+
+              cubeImages3[i].position.x = -150 * Math.sin( phi );
+              cubeImages3[i].position.y = - ( i * 1 ) - 80;
+              cubeImages3[i].position.z = -150 * Math.cos( phi );
+
+              vector.x = cubeImages[i].position.x * 2;
+              vector.y = cubeImages[i].position.y;
+              vector.z = cubeImages[i].position.z * 2;
+
+              vector2.x = cubeImages2[i].position.x * 2;
+              vector2.y = cubeImages2[i].position.y;
+              vector2.z = cubeImages2[i].position.z * 2;
+
+              vector3.x = cubeImages3[i].position.x * 2;
+              vector3.y = cubeImages3[i].position.y;
+              vector3.z = cubeImages3[i].position.z * 2;
+
+              // vector.copy( cubeImages[i].position ).multiplyScalar( 2 );
+
+              cubeImages[i].lookAt( vector );
+              cubeImages2[i].lookAt( vector2 );
+              cubeImages3[i].lookAt( vector3 );
+
+              objects.push( cubeImages[i] );
+              objects.push( cubeImages2[i] );
+              objects.push( cubeImages3[i] );
+
+              cubeImages2[i].rotation.y -= 1;
+              cubeImages[i].rotation.y -= .2;
+              cubeImages3[i].rotation.y -= .2;            
+              scene.add(cubeImages[i]);
+              scene.add(cubeImages2[i]);
+              scene.add(cubeImages3[i]);
+            }
+
+        }
+        function readTextFile(file)
+		{
+			var rawFile = new XMLHttpRequest();
+			rawFile.open("GET", file, false);
+			
+			rawFile.onreadystatechange = function ()
+			{
+			    if(rawFile.readyState === 4)
+			    {
+			        if(rawFile.status === 200 || rawFile.status == 0)
+			        {
+			            var allText = rawFile.responseText;
+			            alert(allText);
+			        }
+			    }
+		}
+		rawFile.send(null);
+		}
+
+        function animate() {
+          time += 0.001;
+          steps +=.04;
+          centerPivotPoint.rotation.y+=0.01;
+          moonPivotPoint.rotation.y+=0.008;
+		  textpivot.rotation.y-=0.25;
+          scaleSphere = boost/300;
+          // emojimove();
+
+
+          if(typeof array === 'object' && array.length > 0) {
+            var k = 0;
+            //for(var i = 0; i < cubeImages.length; i++) {
+              for(var i = 1; i <= 32; i++) {
+                var scale = (array[k] + boost) / 300;
+                cubeImages[i].scale.x = (scale < 1 ? 1 : scale);
+                cubeImages[i].scale.y = (scale < 1 ? 1 : scale);
+                cubeImages[i].scale.z = (scale < 1 ? 1 : scale);
+                k += (k < array.length ? 1 : 0);
+              //}
+            }
+          }
+          
+          //parent.rotation.x += 0.01;
+          //camera.position.x = time;
+          //camera.position.z = Math.cos(time) * 400;
+          //camera.lookAt(ORIGIN);
+
+          orbitControls.update();
+          renderer.render(scene,camera);
+          requestAnimationFrame(animate);
+        }
+
+        requestAnimationFrame(animate);
+
+      })();
+
+    </script>
+  </body>
+</html>
