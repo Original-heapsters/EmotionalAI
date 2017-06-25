@@ -10,12 +10,7 @@ from werkzeug.utils import secure_filename
 if config.ConfigVars['MockForFE'] == 0:
     import sys
     sys.path.append('../../workspace/emai')
-    from validate_cnn import validate
-
-
-
-if config.ConfigVars['MockForFE'] == 0:
-    predictor = None
+    import validate_cnn
 
 app = Flask(__name__)
 
@@ -205,8 +200,6 @@ def Progress():
 
 @app.route('/Prediction', methods=['GET','POST'])
 def Prediction():
-    if config.ConfigVars['MockForFE'] == 0:
-        global predictor
     '''
     GET
         Generate a js visualization based on RESULTS_FILE
@@ -229,7 +222,7 @@ def Prediction():
         #run prediction
         if config.ConfigVars['MockForFE'] == 0:
 
-            predictionResults = predictor.predict()
+            predictionResults = validate_cnn.main()
         else:
             predictionResults = {'angry': 15, 'sadness': 18, 'Anticipation': 3}
 
@@ -274,7 +267,7 @@ def Prediction():
 
             #run prediction
             if config.ConfigVars['MockForFE'] == 0:
-                predictionResults = predictor.predict()
+                predictionResults = validate_cnn.main()
             else:
                 predictionResults = {'angry': 15, 'sadness': 18, 'Anticipation': 3}
 
@@ -520,7 +513,4 @@ def copytree(src, dst, symlinks=False, ignore=None):
 # Running
 #######################################
 if __name__ == '__main__':
-    if config.ConfigVars['MockForFE'] == 0:
-        predictor = validate()
-
     app.run(debug=True, host='0.0.0.0')
