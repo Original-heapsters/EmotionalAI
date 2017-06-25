@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html>
+<head> 
+ <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+ <meta content="utf-8" http-equiv="encoding">
+ <title>Deep Sense | SD AI</title> 
+<link href="css/stylesheet2.css" rel="stylesheet" type="text/css" />
+<link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+    <style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        font-family: 'Lato', sans-serif;
+    }
+    h2{
+        font-family: 'Lato', sans-serif;
+    }
+    h3{
+        padding:20px;
+        font-family: 'Lato', sans-serif;
+    }
+
+    #link {
+        position: absolute;
+        top: 0px; width: 100%;
+        color: #ffffff;
+        padding: 5px;
+        font-family:Monospace;
+        font-size:13px;
+        font-weight: bold;
+        text-align:center;
+    }
+    a {
+        color: #ffffff;
+        font-family: 'Lato', sans-serif;
+    }
+    .inputdiv div{
+        text-align:center;
+    }
+    input{
+        margin: 8px 0;
+        padding: 12px 20px;
+        padding: 12px 20px;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-family: 'Lato', sans-serif;
+        align-self: center;
+    }
+    .hr-divider{
+         width:15em; 
+         color:#F87431;
+         height:7px;
+    }
+    .submit-button{
+        color:#ffffff; 
+        background-color: #333333;
+        border: 2px solid black;
+        width: 15em;
+        font-family: 'Lato', sans-serif;
+    }
+    </style> 
+</head> 
+
+<body>
+<div id="container"></div>
+
+<div id="link">
+<h1 style="padding:40px "><strong>DEEP SENSE</strong></h1>
+    <h2>Emotional Ai</h2>
+    <h3>SD Ai Hackathon</h3>
+    <hr class="hr-divider">
+    <!-- <a href="#">Link</a> | <a href="#">Link</a> | <a href="#">Link</a> -->
+<!-- brussel sprouts start -->
+    <h3>Choose a video:</h3>
+    <form method="post" action="{{ url_for('Input') }}" enctype=multipart/form-data>
+        <div class="inputdiv">
+            <input type="file" name="VideoInput">
+        </div>
+
+        <input class="submit-button" type="submit" value="SUBMIT">
+    </form>
+
+<!-- brussel sprouts end -->
+    </div>
+
+<!-- <div id="info">Loading music<span id="loading_dots"></span></div> -->
+<script src="Sound-Visualizer/js/jquery-3.1.1.min.js"></script>
+<script src="Sound-Visualizer/js/three.js"></script> 
+<script src="Sound-Visualizer/js/dat.gui.min.js"></script> 
+
+<script src="Sound-Visualizer/js/chon.js"></script> 
+<script src="Sound-Visualizer/js/OrbitControls.js"></script> 
+<!-- <script src="js/Animation.js"></script>--> <!--not working, check versions -->
+<!-- <script src="js/stats.js"></script> -->
+<script>
+
+    // global variables
+    var renderer;
+    var scene;
+    var camera;
+
+    var orbitControls, guiControls, datGUI;
+    //var stats;
+    var spotLight, hemi;
+    var SCREEN_WIDTH, SCREEN_HEIGHT;
+    var bat3dModel, bat3dModel2, bat3dModel3, helper;
+    var projector, mouse = { x: 0, y: 0 }, INTERSECTED;
+
+    var objectSpeed = [0.1,0.1];  // slot 0 is x speed, slot 1 is the z speed
+    var objectDirection = [1,-1];  // slot 0 is x direction, slot 1 is the z direction
+    
+    var emptyHealthBarCubeMesh,filledHealthBarCubeMesh;
+
+    var batJsonModelPivotPoint, batJsonModelPivotPoint2,  batJsonModelPivotPoint3, accelleration;
+
+    var fps, fpsInterval, startTime, now, then, elapsed, seconds, sinceStart;
+
+    // var tex, mat, mesh; // test for image loaded texture
+    var batMeshMaterial, batImgMapTexture;
+
+    var sphere=[];
+    var color = new THREE.Color( 0xffffff );
+    var sphereRadius=1;
+    var spherePivotPoint=[];
+    var audioDataScaleSpeed, audioDataScaleSize, rotationSpeed;
+    var audioDataScale,audioDataScaleSmaller;
+    var scalex = (Math.random()*20)+10;//random number between 10 and 20, 
+
+    var stop = false;
+    var frameCount = 0;
+
+    function init() {
+
+        // create a scene, that will hold all our elements such as objects, cameras and lights.
+        scene = new THREE.Scene();
+
+        // create a camera, which defines where we're looking at.
+        camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, 1000);
+
+        //if ( detector.webgl )
+            renderer = new THREE.WebGLRenderer( {alpha:true} );
+        //else
+            //renderer = new THREE.CanvasRenderer(); 
+
+        // create a render, sets the background color and the size
+        //renderer = new THREE.WebGLRenderer({antialias:true});
+        // antialias is technique used to add greater realism to a digital image by smoothing jagged edges on curved lines and diagonals.
+        
+        //renderer.setClearColor( 0x000000, 0 );
+        renderer.setClearColor( getRandomColor() );
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        renderer.shadowMapEnabled=true;
+        renderer.shadowMapSoft=true;
+        
+        var container = document.getElementById( 'container' );
+        container.appendChild( renderer.domElement );
+
+        // ------ add orbit controls ------ 
+        orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+        //orbitControls.addEventListener('change', render);
+        orbitControls.enableDamping = true;
+        orbitControls.dampingFactor = 0.25;
+        orbitControls.enableZoom = true;
+        orbitControls.autoRotate = true;
+        // ------ end orbit controls ------ 
+
+
+        // ------ camera ------ 
+        // position and point the camera to the center of the scene
+        camera.position.x = 20;
+        camera.position.y = 50; // view from the top for perspective and top angle
+        camera.position.z = 0; // view out from the screen
+        //camera.lookAt(scene.position);
+        // ------ end camera ------ 
+
+        // ------ datGUI - user interface to control objects ------ 
+        guiControls = new function(){
+        
+            this.Bone_0 = 0.0;
+            this.Bone_1 = 0.0;
+            this.Bone_2 = 0.0;
+            
+            //this.rotationX = 0.0;
+            //this.rotationY = 0.0;
+            //this.rotationZ = 0.0;
+        };
+
+        // ------ end datGUI user interface to control objects ------ 
+
+        // ------ add lighting ------ 
+        hemi = new THREE.HemisphereLight(0xff000, 0xff0011);
+        //scene.add(hemi); // adds green tint over objects
+
+        scene.fog = new THREE.Fog (0x000000, .01, 500);
+
+        var dirLight = new THREE.DirectionalLight();
+        dirLight.position.set(15, 10, -5);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        var dirLight2 = new THREE.DirectionalLight();
+        dirLight2.position.set(-15, 10, -5);
+        dirLight2.castShadow = true;
+        scene.add(dirLight2);
+
+        var spotLight = new THREE.SpotLight(0xffffff);
+        spotLight.position.set(40, 40, 40);
+        spotLight.castShadow = true;
+        scene.add(spotLight);
+        // ------ end add lighting ------ 
+
+        // ------ health bars creation ------ 
+        var clearWhiteHealthMaterial = new THREE.MeshBasicMaterial({
+           color: 0xFFFFFF, 
+           shininess: 30, 
+           specular: 0x111111,  
+           opacity:0.05
+        });
+
+        var redHealthMaterial = new THREE.MeshBasicMaterial({
+           color: 0xff0000, 
+           shininess: 30, 
+           specular: 0x111111,  
+        });
+
+        var emptyHealthBarCubeGeometry = new THREE.CubeGeometry( 3, 3, 50 );
+
+        var filledHealthBarCubeGeometry = new THREE.CubeGeometry( 3.1, 3.1, 20 );
+
+        emptyHealthBarCubeMesh = new THREE.Mesh( 
+          emptyHealthBarCubeGeometry,
+          clearWhiteHealthMaterial
+        );
+
+        filledHealthBarCubeMesh = new THREE.Mesh( 
+          filledHealthBarCubeGeometry,
+          redHealthMaterial
+        );
+        
+        //scene.add(emptyHealthBarCubeMesh);
+        //scene.add(filledHealthBarCubeMesh);
+
+        //23.6 is the rotation number that has to be set in order to be horizontal in length to the view of the screen
+        emptyHealthBarCubeMesh.rotation.y = 23.6;
+        filledHealthBarCubeMesh.rotation.y = 23.6;
+
+        emptyHealthBarCubeMesh.position.y=30;
+        filledHealthBarCubeMesh.position.y=30;
+        // ------ end health bars creation ------ 
+
+        // initialize object to perform world/screen calculations
+        projector = new THREE.Projector();
+        
+        // when the mouse moves, call the given function
+        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+        //add json loader, call add model function
+        var jsonLoader = new THREE.JSONLoader();
+            
+            createSpheres();
+
+            render()
+
+            //read console data from scene or object
+            //console.log("scene: " + scene);
+            //console.log("batJsonModel: " + JSON.parse(JSON.stringify(batJsonModel)));
+            //console.log("batJsonModel: " + batJsonModel);
+
+            window.addEventListener( 'resize', onWindowResize, false );
+    }
+
+    function createSpheres(){
+
+        for(var s=0;s<50;s++){//10 spheres
+            var randScale = (Math.random()*.9)+.1;//rand num between .1 to .9
+            var sphereGeometry = new THREE.SphereGeometry( randScale, 20, 20 ); //radius, widthSeg, heightSeg
+            //SphereGeometry(radius, widthSegments, heightSegments, phiStart, phiLength, thetaStart, thetaLength)
+            
+            var sphereMaterial = new THREE.MeshPhongMaterial( {
+                color: color.setRGB( Math.random(), Math.random(), Math.random()),
+                opacity:0.9
+            });
+            sphereMaterial.transparent=true;
+            spherePivotPoint[s] = new THREE.Object3D();
+            spherePivotPoint[s].position.set(0,0,0);
+
+            sphere[s] = new THREE.Mesh( sphereGeometry, sphereMaterial );
+            sphere[s].position.set((Math.random()*100)-100, (Math.random()*100)-100, (Math.random()*100)-100); //random number between -100 and 100
+
+        }//end for loop to create 10 spheres
+
+        sphere.forEach(function(element, index, array) { 
+            scene.add(element); // add spheres to the scene
+        });
+
+        spherePivotPoint.forEach(function(element, index, array) { 
+            scene.add(element); // add sphere's pivot points to the scene
+        });
+
+        for (var s=0;s<50;s++){//10 spheres
+            spherePivotPoint[s].add(sphere[s]); //put each pivot point with each sphere
+        }
+
+    }
+
+    //start sphere animation functions -----
+    //rotate X of the pivot point that the spheres contain in
+    function spheresRotateX(){
+        for (var x =0; x<50;x++){
+            rotationSpeed = getRandomInt(.005,.1);
+            spherePivotPoint[x].rotation.x += rotationSpeed*0.001; 
+            //spherePivotPoint[x].rotation.y += rotationSpeed*audioDataScaleSpeed*0.1; 
+            //spherePivotPoint[x].rotation.z += rotationSpeed*audioDataScaleSpeed*0.1;
+
+            spherePivotPoint[x].rotation.x += rotationSpeed*0.0005; 
+            //spherePivotPoint[x].rotation.y += rotationSpeed*0.001; 
+            //spherePivotPoint[x].rotation.z += rotationSpeed*0.001;
+        }
+    }
+
+    //rotate Y of the pivot point that the spheres contain in
+    function spheresRotateY(){
+        for (var x =0; x<50;x++){
+            rotationSpeed = getRandomInt(.005,.1);
+            //spherePivotPoint[x].rotation.x += rotationSpeed*audioDataScaleSpeed*0.1; 
+            spherePivotPoint[x].rotation.y += rotationSpeed*0.001; 
+            //spherePivotPoint[x].rotation.z += rotationSpeed*audioDataScaleSpeed*0.1;
+
+            //spherePivotPoint[x].rotation.x += rotationSpeed*0.001; 
+            spherePivotPoint[x].rotation.y += rotationSpeed*0.0005; 
+            //spherePivotPoint[x].rotation.z += rotationSpeed*0.001;
+        }
+    }
+
+    //rotate Z of the pivot point that the spheres contain in
+    function spheresRotateZ(){
+        for (var x =0; x<50;x++){
+            rotationSpeed = getRandomInt(.005,.1);
+            //spherePivotPoint[x].rotation.x += rotationSpeed*audioDataScaleSpeed*0.1; 
+            //spherePivotPoint[x].rotation.y += rotationSpeed*audioDataScaleSpeed*0.1; 
+            spherePivotPoint[x].rotation.z += rotationSpeed*0.001;
+
+            //spherePivotPoint[x].rotation.x += rotationSpeed*0.001; 
+            //spherePivotPoint[x].rotation.y += rotationSpeed*0.001; 
+            spherePivotPoint[x].rotation.z += rotationSpeed*0.0005;
+        }
+    }
+    // end sphere animation functions-----
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+    }
+
+    // Returns a random number between min (inclusive) and max (exclusive)
+    function getRandomArbitrary(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    // Returns a random integer between min (included) and max (excluded)
+    // Using Math.round() will give you a non-uniform distribution!
+    function getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
+
+    // ------------------------- DANCING MOVES START -------------------------
+
+    //can move with a pivot point
+    
+    var step=0;
+
+    var requestId = 0;
+
+    function start() {
+      animationStartTime = window.performance.now();
+      requestId = window.requestAnimationFrame(animate);
+    }
+
+    function stop() {
+      if (requestId)
+        window.cancelAnimationFrame(requestId);
+      requestId = 0;
+    }
+
+    var secondStart = 0;
+
+    function render() {
+
+        //test frames----------------------
+        //log seconds and frames per seconds
+        if (stop) {
+            return;
+        }
+        // calc elapsed time since last loop
+        now = Date.now();
+        elapsed = now - then;
+        // Get ready for next frame by setting then=now, but...
+        // Also, adjust for fpsInterval not being multiple of 16.67
+        then = now - (elapsed % fpsInterval);
+
+        //test and report seconds and frames per second
+        sinceStart = now - startTime;
+        var currentFps = Math.round(1000 / (sinceStart / ++frameCount) * 100) / 100;
+        seconds = Math.round(Math.round(sinceStart / 1000 * 100) / 100);
+        //console.log("Elapsed time= " + seconds + " secs @ " + currentFps + " fps.");
+        //http://jsfiddle.net/m1erickson/CtsY3/
+        //end test frames
+
+        step+=0.004;
+        accelleration = -10 + 50 * step % 220;
+        //test shows two bats fly up when the Averaged Maximum Audio Frequency Band represented is greater than 252.
+        
+        var k = 0;
+
+        spheresRotateX();
+        spheresRotateY();
+        spheresRotateZ();
+
+        
+        for (var i=0; i<50; i++){        
+            sphere[i].scale.x = scalex;
+            sphere[i].scale.y = scalex;
+            sphere[i].scale.z = scalex;
+        }
+
+        //batJsonModelPivotPoint.rotation.y += 0.01;
+
+
+        requestAnimationFrame(render);
+
+        orbitControls.update();
+
+        renderer.render(scene, camera);
+        
+        update();
+    } //------------------ render function ends ------------------
+
+    function onDocumentMouseMove( event ) 
+    {
+        // the following line would stop any other event handler from firing
+        // (such as the mouse's TrackballControls)
+        // event.preventDefault();
+        
+        // update the mouse variable
+        mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    }
+    function getRandomColor () {
+      var hex = Math.floor(Math.random() * 0xFFFFFF);
+      return "#" + ("000000" + hex.toString(16)).substr(-6);
+    }
+
+    function randomFairColor() {
+        var min = 64;
+        var max = 224;
+        var r = (Math.floor(Math.random() * (max - min + 1)) + min) * 65536;
+        var g = (Math.floor(Math.random() * (max - min + 1)) + min) * 256;
+        var b = (Math.floor(Math.random() * (max - min + 1)) + min);
+        return r + g + b;
+    }
+
+    function update()
+    {
+    // find intersections
+
+    // create a Ray with origin at the mouse position
+    //   and direction into the scene (camera direction)
+    var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
+    projector.unprojectVector( vector, camera );
+    var ray = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+    // create an array containing all objects in the scene with which the ray intersects
+    var intersects = ray.intersectObjects( scene.children );
+
+    // INTERSECTED = the object in the scene currently closest to the camera 
+    //      and intersected by the Ray projected from the mouse position    
+    
+    // if there is one (or more) intersections
+    if ( intersects.length > 0 )
+    {
+        // if the closest object intersected is not the currently stored intersection object
+        if ( intersects[ 0 ].object != INTERSECTED ) 
+        {
+            // restore previous intersection object (if it exists) to its original color
+            if ( INTERSECTED ) 
+                INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
+            // store reference to closest object as current intersection object
+            INTERSECTED = intersects[ 0 ].object;
+            // store color of closest object (for later restoration)
+            INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+            // set a new color for closest object
+            INTERSECTED.material.color.setHex( 0xffff00 );
+        }
+    } 
+    else // there are no inters\ections
+    {
+        // restore previous intersection object (if it exists) to its original color
+        if ( INTERSECTED ) 
+            INTERSECTED.material.color.setHex( INTERSECTED.currentHex );
+        // remove previous intersection object reference
+        //     by setting current intersection object to "nothing"
+        INTERSECTED = null;
+    }
+
+
+    /*if ( keyboard.pressed("z") ) 
+    { 
+        // do something
+        // pause?
+    }*/
+
+}
+
+    window.onload = init;
+
+    /*
+    $(window).resize(function(){
+        SCREEN_WIDTH = window.innerWidth;
+        SCREEN_HEIGHT = window.innerHeight;
+        camera.aspect = SCREEN_WIDTH/SCREEN_HEIGHT;
+        camera.updateProjectionMatrix();
+        renderer.setSize(SCREEN_WIDTH,SCREEN_HEIGHT);
+    });
+    */
+</script>
+
+</body>
+</html>
