@@ -1,18 +1,27 @@
 import os
 import json
 import config
-#import youtube_dl
+import shutil
+import VideoOperations
 import urllib.request
+from shutil import copyfile
 from flask import Flask, render_template, request, url_for, redirect
 from werkzeug.utils import secure_filename
+import sys
+sys.path.append('../../workspace/emai')
+import validate_cnn
 
 app = Flask(__name__)
 
 #######################################
 # Constants
 #######################################
+VIDEOFULL_UPLOAD_FOLDER = 'static/VideoFull/'
 VIDEO_UPLOAD_FOLDER = 'static/VideoFiles/'
+AUDIOFULL_FOLDER = 'static/AudioFull/'
 AUDIO_FOLDER = 'static/AudioFiles/'
+AUDIOSPEC_FOLDER = 'static/AudioSpec/'
+AVMERGE_FOLDER = 'static/AVMerge/'
 FRAMES_FOLDER = 'static/VideoFrames/'
 PREDICTION_FOLDER = 'static/Prediction/'
 PLOTS_FOLDER = 'static/Plots/'
@@ -27,8 +36,12 @@ ALLOWED_EXTENSIONS = set(['mp4'])
 #######################################
 # Configuration
 #######################################
+app.config['VIDEOFULL_UPLOAD_FOLDER'] = VIDEOFULL_UPLOAD_FOLDER
 app.config['VIDEO_UPLOAD_FOLDER'] = VIDEO_UPLOAD_FOLDER
+app.config['AUDIOFULL_FOLDER'] = AUDIOFULL_FOLDER
 app.config['AUDIO_FOLDER'] = AUDIO_FOLDER
+app.config['AUDIOSPEC_FOLDER'] = AUDIOSPEC_FOLDER
+app.config['AVMERGE_FOLDER'] = AVMERGE_FOLDER
 app.config['FRAMES_FOLDER'] = FRAMES_FOLDER
 app.config['PREDICTION_FOLDER'] = PREDICTION_FOLDER
 app.config['PLOTS_FOLDER'] = PLOTS_FOLDER
@@ -37,11 +50,23 @@ app.config['ASSETS'] = ASSETS
 #######################################
 # Setup
 #######################################
+if os.path.isdir(VIDEOFULL_UPLOAD_FOLDER) is False:
+    os.makedirs(VIDEOFULL_UPLOAD_FOLDER)
+
 if os.path.isdir(VIDEO_UPLOAD_FOLDER) is False:
     os.makedirs(VIDEO_UPLOAD_FOLDER)
 
+if os.path.isdir(AUDIOFULL_FOLDER) is False:
+    os.makedirs(AUDIOFULL_FOLDER)
+
 if os.path.isdir(AUDIO_FOLDER) is False:
     os.makedirs(AUDIO_FOLDER)
+
+if os.path.isdir(AUDIOSPEC_FOLDER) is False:
+    os.makedirs(AUDIOSPEC_FOLDER)
+
+if os.path.isdir(AVMERGE_FOLDER) is False:
+    os.makedirs(AVMERGE_FOLDER)
 
 if os.path.isdir(FRAMES_FOLDER) is False:
     os.makedirs(FRAMES_FOLDER)
@@ -164,8 +189,10 @@ def Progress():
             datFile.close()
 
         log('Rendering progress data')
+
+        spectimages = sorted_ls(AVMERGE_FOLDER)
         # Enable show me the money
-        return render_template('Progress.html', data=data)
+        return render_template('Progress.html', data=data, spectimages=spectimages)
 
 @app.route('/Prediction', methods=['GET','POST'])
 def Prediction():
@@ -178,8 +205,30 @@ def Prediction():
     if request.method == 'POST':
         log('Prediction POST')
         # Most likely unused
+        #clear dest dirFiles
+        directory = '/home/ubuntu/workspace/emai/data/validation_data'
+        if os.path.exists(directory):
+            shutil.rmtree(directory)
+            os.makedirs(directory)
+        else:
+            os.makedirs(directory)
 
-        return render_template('Prediction.html')
+        copytree(AVMERGE_FOLDER, directory)
+
+        #run prediction
+        predictionResults = validate_cnn.main()
+
+        with open(RESULTS_FILE, 'w') as fileWr:
+            fileWr.close()
+
+        with open(RESULTS_FILE, 'w') as pred:
+            for emotion in predictionResults:
+                pred.write(emotion + ',' + str(predictionResults[emotion]))
+                pred.close
+
+        print (str(predictionResults))
+
+        return redirect(url_for('Prediction'))
     else:
         log('Prediction GET')
         # Using DATA_FILE and final prediction from model, show js frontend
@@ -196,9 +245,11 @@ def Prediction():
             finalPrediction = finFile.readlines()
             finFile.close()
 
+        spectimages = sorted_ls(AVMERGE_FOLDER)
+
         log('Rendering progress and final analysis data')
         # Newly populated X folder
-        return render_template('Prediction.html', data=data, finalPrediction=finalPrediction)
+        return render_template('Prediction.html', data=data, finalPrediction=finalPrediction, spectimages=spectimages)
 
 @app.route('/PastRuns', methods=['GET','POST'])
 def PastRuns():
@@ -227,6 +278,33 @@ def PastRuns():
         # Show all past runs that canbe viewed with their appropriate *ID*'s'
         return render_template('PastRuns.html')
 
+@app.route('/Test', methods=['GET','POST'])
+def Test():
+    '''
+    *STRETCH*
+    GET
+        past runs and be able to display their
+        progress and final predication on demand
+    POST
+        Replace current DATA_FILE and RESULTS_FILE
+        with selected run's files and redirect to progress view
+    '''
+    if request.method == 'POST':
+        log('PastRuns POST')
+        # After selecting a past run, take its results files to be able to regen the progress and prediction screens
+
+        # Copy particular run's *ID*_DATA_FILE to DATA_FILE
+
+        # Copy particular run's *ID*_RESULTS_FILE to RESULTS_FILE
+
+        # Redirect to Progress
+
+        return 'Hello'#render_template('PastRuns.html')
+    else:
+        log('PastRuns GET')
+        # Show all past runs that canbe viewed with their appropriate *ID*'s'
+        return render_template('test.html')
+
 #######################################
 # Utility methods
 #######################################
@@ -245,6 +323,16 @@ def processVideo(inputPath):
     Run any intermediary steps on the video before entering prediction phase
     '''
     log('Running PreProcessing on ' + inputPath)
+
+    # Save full version of video
+    fullVideoPath = saveFullVideoInDir(inputPath)
+    os.system('rm '+ VIDEO_UPLOAD_FOLDER+'*.mp4')
+
+    vOpt = VideoOperations.VideoOperations(desiredFrames=config.ConfigVars['DesiredFrames'],inputVideo=fullVideoPath,outputPath=VIDEO_UPLOAD_FOLDER, outputAudio=AUDIO_FOLDER)
+    vOpt.getVideoFrames()
+    vOpt.getChunks(VIDEO_UPLOAD_FOLDER)
+    vOpt.getAudio()
+    vOpt.generateSpectroShizz()
 
     videoFile = None
     return videoFile
@@ -266,6 +354,17 @@ def saveVideoInDir(vid):
     vid.save(fileDest)
 
     return fileDest
+
+def saveFullVideoInDir(vid):
+    log('Saving ' + vid+ ' to ' + VIDEOFULL_UPLOAD_FOLDER)
+
+    copyfile(vid, app.config['VIDEOFULL_UPLOAD_FOLDER'] + 'full.mp4')
+    path = os.path.join('.',VIDEOFULL_UPLOAD_FOLDER + 'full.mp4')
+    # filename = secure_filename(vid.filename)
+    # fileDest = os.path.join(app.config['VIDEOFULL_UPLOAD_FOLDER'], filename)
+    # vid.save(fileDest)
+
+    return path
 
 def downloadVideo(videoURL):
     '''
@@ -311,8 +410,21 @@ def doPrediction():
     log('Done with prediction')
     return True
 
+def sorted_ls(path):
+    dirFiles = sorted(os.listdir(path), key=lambda x: int(x.split('.')[0]))
+    return dirFiles
+
+def copytree(src, dst, symlinks=False, ignore=None):
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
+        else:
+            shutil.copy2(s, d)
+
 #######################################
 # Running
 #######################################
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')

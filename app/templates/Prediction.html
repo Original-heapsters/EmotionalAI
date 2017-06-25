@@ -19,6 +19,13 @@
     <br>
     <br>
     <h1> Predictions over time </h1>
+    {% if spectimages %}
+        <table>
+          {% for image in spectimages %}
+              <img src="{{ url_for('static', filename='AVMerge/'+image)}}">
+          {% endfor %}
+        </table>
+    {% endif %}
     <table>
       {% for entry in data %}
       <tr>
