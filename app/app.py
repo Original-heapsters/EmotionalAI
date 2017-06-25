@@ -82,7 +82,8 @@ if os.path.isdir(PLOTS_FOLDER) is False:
 if os.path.isdir(ASSETS) is False:
     os.makedirs(ASSETS)
 
-predictor = validate()
+if config.ConfigVars['MockForFE'] == 0:
+    predictor = validate()
 
 #######################################
 # Routing
@@ -201,6 +202,8 @@ def Progress():
 
 @app.route('/Prediction', methods=['GET','POST'])
 def Prediction():
+    if config.ConfigVars['MockForFE'] == 0:
+        global predictor
     '''
     GET
         Generate a js visualization based on RESULTS_FILE
