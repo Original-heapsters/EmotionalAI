@@ -330,6 +330,7 @@
         TorusKnotMesh.position.set(0, -50, 0);
 
         // code for bottom meshes -----
+        //
 
         var SphereMeshSmaller3 = new THREE.Mesh(
           SphereGeometrySmaller,
@@ -345,7 +346,9 @@
           moonMaterial
         );
 
+
         SphereMeshSmaller3.position.set(50, -50, 50);//reflective bottom
+
         TorusMesh.position.set(-50, -50, -50);//reflective bottom
         // end code for bottom meshes -----
 
@@ -382,8 +385,10 @@
         TorusKnotMesh.castShadow = true;
         TorusKnotMesh.receiveShadow = true;
 
+
         SphereMeshSmaller3.castShadow = true;
         SphereMeshSmaller3.receiveShadow = true;
+
 
         TorusMesh.castShadow = true;
         TorusMesh.receiveShadow = true;
@@ -396,29 +401,36 @@
 
         SphereMeshBigger2.castShadow = true;
         SphereMeshBigger2.receiveShadow = true;
+scene.add(TorusMesh);
 
-        //water
-        scene.add(SphereMeshSmaller2);
-        scene.add(SphereMeshSmaller);
-        scene.add(TorusKnotMesh);
+        {% if finalEmotion is defined %}
+          // //water
+          scene.add(SphereMeshSmaller);
+          scene.add(SphereMeshSmaller2);
+          scene.add(TorusMesh3);
+          scene.add(TorusMesh4);
 
-        //reflective chrome bottom
+          scene.add(TorusKnotMesh);
+          //top of the aquarium
+
+          moonPivotPoint = new THREE.Object3D();
+          moonPivotPoint.position.set(0, 0, 0);
+          moonPivotPoint.add(SphereMeshBigger2);
+          scene.add(moonPivotPoint);
+
+          scene.add(SphereMeshBigger2);
+
+
+        {% endif %}
+
+
+
         scene.add(SphereMeshSmaller3);
-        scene.add(TorusMesh);
-
-        //top of the aquarium
-        scene.add(TorusMesh3);
-        scene.add(TorusMesh4);
-        scene.add(SphereMeshBigger2);
-
-        moonPivotPoint = new THREE.Object3D();
-        moonPivotPoint.position.set(0, 0, 0);
-        moonPivotPoint.add(SphereMeshBigger2);
-        scene.add(moonPivotPoint);
-
+        //reflective chrome bottom
         scene.add(camera);
         scene.add(skybox);
         // scene.add(cylinder);
+
         signs();
         signsTest();
 
@@ -501,32 +513,33 @@
 
         } ); // end loads koi fish into the scene----------------------------------------------
          koiLoader.load( "{{ url_for('static', filename='Sound-Visualizer/models/half-face.stl') }}");
+         {% if finalEmotion is defined %}
+           var craneLoader = new THREE.STLLoader(); // loads crane into the scene------------------
 
-         var craneLoader = new THREE.STLLoader(); // loads crane into the scene------------------
+          craneLoader.addEventListener( 'load', function ( event ) {
 
-        craneLoader.addEventListener( 'load', function ( event ) {
+              var geometry = event.content;
+              geometry.computeTangents();
+              mesh = new THREE.Mesh( geometry, waterMaterial );
 
-            var geometry = event.content;
-            geometry.computeTangents();
-            mesh = new THREE.Mesh( geometry, waterMaterial );
+              mesh.position.set( 0, 0, 70);
+              mesh.rotation.set( - Math.PI / 2, 0, 0);
+              mesh.rotation.z=1.3;
 
-            mesh.position.set( 0, 0, 70);
-            mesh.rotation.set( - Math.PI / 2, 0, 0);
-            mesh.rotation.z=1.3;
+              mesh.scale.set( .2, .2, .2 );
 
-            mesh.scale.set( .2, .2, .2 );
+              mesh.castShadow = true;
+              mesh.receiveShadow = true;
 
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
+              objects.push(mesh);
+              scene.add( mesh );
+              centerPivotPoint.add( mesh );
+              scene.add( centerPivotPoint );
+              //pivotPoint3.add( mesh );
 
-            objects.push(mesh);
-            scene.add( mesh );
-            centerPivotPoint.add( mesh );
-            scene.add( centerPivotPoint );
-            //pivotPoint3.add( mesh );
-
-        } ); // end loads crane into the scene----------------------------------------------
-         craneLoader.load( "{{ url_for('static', filename='Sound-Visualizer/models/crane.stl')}}" );
+          } ); // end loads crane into the scene----------------------------------------------
+           craneLoader.load( "{{ url_for('static', filename='Sound-Visualizer/models/crane.stl')}}" );
+         {% endif %}
 
             // pivots
             var pivot1 = new THREE.Object3D();
@@ -710,7 +723,7 @@
       	var value='{{finalEmotion}}';
         console.log('emotion = ' + value);
         console.log('Confidence = {{confidence}}');
-      	value='angry';
+      	//value='angry';
       	if (value == 'angry'){
       		femoji_anger();
       	}
@@ -769,7 +782,9 @@
         surfaces.rotation.x=1.57;
         surfaces.position.set(0,-4,0);
 
-        scene.add(surfaces);
+        {% if finalEmotion is defined %}
+          scene.add(surfaces);
+        {% endif %}
         console.log("surfaces: "+ surfaces);
       }
 
@@ -781,60 +796,64 @@
           var vector3 = new THREE.Vector3();
           var cubegeometry = new THREE.CubeGeometry(30, 22, 1, 1);
 
-            for ( var i = 1, l = 40; i <= l; i ++ ) {//array of images, same geometries, array of meshes (geometries and materials)
+            // for ( var i = 1, l = 40; i <= l; i ++ ) {//array of images, same geometries, array of meshes (geometries and materials)
+              {% for texture in texturesVid %}
 
-              var phi = i * 0.175 + Math.PI;
+                var i = {{loop.index}}
 
-              cubeImages[i] = new THREE.Mesh(cubegeometry,imageMaterial[i]);
-              cubeImages[i].doubleSided = true;
+                var phi = {{loop.index}} * 0.175 + Math.PI;
 
-              cubeImages2[i] = new THREE.Mesh(cubegeometry,imageMaterial2[i]);
-              cubeImages2[i].doubleSided = true;
+                cubeImages[{{loop.index}}] = new THREE.Mesh(cubegeometry,imageMaterial[{{loop.index}}]);
+                cubeImages[{{loop.index}}].doubleSided = true;
 
-              cubeImages3[i] = new THREE.Mesh(cubegeometry,imageMaterial3[i]);
-              cubeImages3[i].doubleSided = true;
+                cubeImages2[{{loop.index}}] = new THREE.Mesh(cubegeometry,imageMaterial2[{{loop.index}}]);
+                cubeImages2[{{loop.index}}].doubleSided = true;
 
-              cubeImages[i].position.x = -150 * Math.sin( phi );
-              cubeImages[i].position.y = - ( i * 1 ) + 80;
-              cubeImages[i].position.z = -150 * Math.cos( phi );
+                cubeImages3[{{loop.index}}] = new THREE.Mesh(cubegeometry,imageMaterial3[{{loop.index}}]);
+                cubeImages3[{{loop.index}}].doubleSided = true;
 
-              cubeImages2[i].position.x = -150 * Math.sin( phi );
-              cubeImages2[i].position.y = - ( i * 1 ) + 0;
-              cubeImages2[i].position.z = -150 * Math.cos( phi );
+                cubeImages[{{loop.index}}].position.x = -150 * Math.sin( phi );
+                cubeImages[{{loop.index}}].position.y = - ( {{loop.index}} * 1 ) + 80;
+                cubeImages[{{loop.index}}].position.z = -150 * Math.cos( phi );
 
-              cubeImages3[i].position.x = -150 * Math.sin( phi );
-              cubeImages3[i].position.y = - ( i * 1 ) - 80;
-              cubeImages3[i].position.z = -150 * Math.cos( phi );
+                cubeImages2[{{loop.index}}].position.x = -150 * Math.sin( phi );
+                cubeImages2[{{loop.index}}].position.y = - ( {{loop.index}} * 1 ) + 0;
+                cubeImages2[{{loop.index}}].position.z = -150 * Math.cos( phi );
 
-              vector.x = cubeImages[i].position.x * 2;
-              vector.y = cubeImages[i].position.y;
-              vector.z = cubeImages[i].position.z * 2;
+                cubeImages3[{{loop.index}}].position.x = -150 * Math.sin( phi );
+                cubeImages3[{{loop.index}}].position.y = - ( {{loop.index}} * 1 ) - 80;
+                cubeImages3[{{loop.index}}].position.z = -150 * Math.cos( phi );
 
-              vector2.x = cubeImages2[i].position.x * 2;
-              vector2.y = cubeImages2[i].position.y;
-              vector2.z = cubeImages2[i].position.z * 2;
+                vector.x = cubeImages[i].position.x * 2;
+                vector.y = cubeImages[i].position.y;
+                vector.z = cubeImages[i].position.z * 2;
 
-              vector3.x = cubeImages3[i].position.x * 2;
-              vector3.y = cubeImages3[i].position.y;
-              vector3.z = cubeImages3[i].position.z * 2;
+                vector2.x = cubeImages2[i].position.x * 2;
+                vector2.y = cubeImages2[i].position.y;
+                vector2.z = cubeImages2[i].position.z * 2;
 
-              // vector.copy( cubeImages[i].position ).multiplyScalar( 2 );
+                vector3.x = cubeImages3[i].position.x * 2;
+                vector3.y = cubeImages3[i].position.y;
+                vector3.z = cubeImages3[i].position.z * 2;
 
-              cubeImages[i].lookAt( vector );
-              cubeImages2[i].lookAt( vector2 );
-              cubeImages3[i].lookAt( vector3 );
+                // vector.copy( cubeImages[i].position ).multiplyScalar( 2 );
 
-              objects.push( cubeImages[i] );
-              objects.push( cubeImages2[i] );
-              objects.push( cubeImages3[i] );
+                cubeImages[i].lookAt( vector );
+                cubeImages2[i].lookAt( vector2 );
+                cubeImages3[i].lookAt( vector3 );
 
-              cubeImages2[i].rotation.y -= 1;
-              cubeImages[i].rotation.y -= .2;
-              cubeImages3[i].rotation.y -= .2;
-              scene.add(cubeImages[i]);
-              scene.add(cubeImages2[i]);
-              scene.add(cubeImages3[i]);
-            }
+                objects.push( cubeImages[i] );
+                objects.push( cubeImages2[i] );
+                objects.push( cubeImages3[i] );
+
+                cubeImages2[i].rotation.y -= 1;
+                cubeImages[i].rotation.y -= .2;
+                cubeImages3[i].rotation.y -= .2;
+                scene.add(cubeImages[i]);
+                scene.add(cubeImages2[i]);
+                scene.add(cubeImages3[i]);
+              {% endfor %}
+            // }
 
         }
         function readTextFile(file)
@@ -860,7 +879,9 @@
           time += 0.001;
           steps +=.04;
           centerPivotPoint.rotation.y+=0.01;
-          moonPivotPoint.rotation.y+=0.008;
+          {% if finalEmotion is defined %}
+            moonPivotPoint.rotation.y+=0.008;
+          {% endif %}
 		      textpivot.rotation.y-=0.25;
           scaleSphere = boost/300;
           // emojimove();

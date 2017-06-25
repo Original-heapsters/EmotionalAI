@@ -2,7 +2,7 @@ ConfigVars = {}
 ConfigVars ['PastRunsEnabled'] = 1
 ConfigVars ['PreProcessVideos'] = 1
 ConfigVars ['DownloadURLS'] = 1
-ConfigVars['DesiredFrames'] = 40
+ConfigVars['DesiredFrames'] = 20
 ConfigVars['MockForFE'] = 1
 
 # 0 = Dont log anything

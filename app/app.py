@@ -112,43 +112,43 @@ def Input():
         log('Input POST')
 
         out = None
-        url = request.form['URLInput']
-        log('Checking url...it is ' + url)
+        #url = request.form['URLInput']
+        #log('Checking url...it is ' + url)
 
-        if url:
-            log('Processing url')
-            # Remove last videofile being dealt with
-            clearVideoDir()
+        # if url:
+        #     log('Processing url')
+        #     # Remove last videofile being dealt with
+        #     clearVideoDir()
+        #
+        #     if config.ConfigVars['DownloadURLS'] == 0:
+        #         log('Writing video url to file')
+        #         with open(URL_FILE, 'w') as linkFile:
+        #              linkFile.write(url)
+        #              linkFile.close()
+        #         log('Done writing video url to file')
+        #
+        #     else:
+        #         log('Downloading url')
+        #         videoPath = downloadVideo(url)
+        #
+        #         if config.ConfigVars['PreProcessVideos'] == 1:
+        #             log('PreProcessing downloaded video')
+        #             out = processURL(videoPath)
+        #
+        # elif 'VideoInput' in request.files:
+        log('User uploaded a video')
+        # Remove last videofile being dealt with
+        clearVideoDir()
 
-            if config.ConfigVars['DownloadURLS'] == 0:
-                log('Writing video url to file')
-                with open(URL_FILE, 'w') as linkFile:
-                     linkFile.write(url)
-                     linkFile.close()
-                log('Done writing video url to file')
+        # Save the input video file
+        inVideo = request.files['VideoInput']
+        videoPath = saveVideoInDir(inVideo)
+        log('Saved user video to ' + videoPath)
 
-            else:
-                log('Downloading url')
-                videoPath = downloadVideo(url)
-
-                if config.ConfigVars['PreProcessVideos'] == 1:
-                    log('PreProcessing downloaded video')
-                    out = processURL(videoPath)
-
-        elif 'VideoInput' in request.files:
-            log('User uploaded a video')
-            # Remove last videofile being dealt with
-            clearVideoDir()
-
-            # Save the input video file
-            inVideo = request.files['VideoInput']
-            videoPath = saveVideoInDir(inVideo)
-            log('Saved user video to ' + videoPath)
-
-            # process video before passing to prediction
-            if config.ConfigVars['PreProcessVideos'] == 1:
-                log('PreProcessing uploaded video')
-                out = processVideo(videoPath)
+        # process video before passing to prediction
+        if config.ConfigVars['PreProcessVideos'] == 1:
+            log('PreProcessing uploaded video')
+            out = processVideo(videoPath)
 
         log('Redirecting to progress page')
         return redirect(url_for('Test'))
