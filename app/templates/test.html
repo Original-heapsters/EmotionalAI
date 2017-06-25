@@ -35,7 +35,7 @@
   <h1>DEEP SENSE</h1>
   <h2>Emotional Ai</h2>
   <h3>SD Ai Hackathon</h3>
-	<a href="#">Link</a> | <a href="#">Link</a> | <a href="#">Link</a>
+	<a href="{{url_for('Prediction')}}">Go To Prediction</a> | <a href="{{url_for('Input')}}">Back to Input</a>
 <!-- 	<button onclick="femoji_anger()">anger</button>
 
 	<button onclick="femoji_anticipation()" href="javascript:void(0);">anticipation</button>
@@ -689,7 +689,7 @@
       function femoji_sadness(){
       	var boxgeometry = new THREE.BoxGeometry( 50, 50, 2, 50 );
 		emoji_sadness = new THREE.Mesh( boxgeometry, emoji_sadnessMaterial );
-		// emoji_sadness.position.set(0,0,0);
+		emoji_sadness.position.set(0,0,0);
 		scene.add( emoji_sadness );
       }
       function femoji_surprise(){
@@ -708,11 +708,33 @@
 
       window.onload=function showEmoji(){
       	var value='{{finalEmotion}}';
+        console.log('emotion = ' + value);
+        console.log('Confidence = {{confidence}}');
       	value='angry';
       	if (value == 'angry'){
+      		femoji_anger();
+      	}
+        if (value == 'sadness'){
+      		femoji_sadness();
+      	}
+        if (value == 'joy'){
       		femoji_joy();
       	}
-      	alert('sarah');
+        if (value == 'trust'){
+      		femoji_trust();
+      	}
+        if (value == 'surprise'){
+      		femoji_surprise();
+      	}
+        if (value == 'fear'){
+      		femoji_fear();
+      	}
+        if (value == 'disgust'){
+      		femoji_disgust();
+      	}
+        if (value == 'anticipation'){
+      		femoji_anticipation();
+      	}
 
       }
 

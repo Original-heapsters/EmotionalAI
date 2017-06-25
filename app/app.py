@@ -45,6 +45,7 @@ app.config['AVMERGE_FOLDER'] = AVMERGE_FOLDER
 app.config['FRAMES_FOLDER'] = FRAMES_FOLDER
 app.config['PREDICTION_FOLDER'] = PREDICTION_FOLDER
 app.config['PLOTS_FOLDER'] = PLOTS_FOLDER
+app.config["CACHE_TYPE"] = "null"
 app.config['ASSETS'] = ASSETS
 
 #######################################
@@ -150,7 +151,7 @@ def Input():
                 out = processVideo(videoPath)
 
         log('Redirecting to progress page')
-        return redirect(url_for('Progress'))
+        return redirect(url_for('Test'))
     else:
         log('Input GET')
         return render_template('Input.html')
@@ -192,6 +193,7 @@ def Progress():
 
         spectimages = sorted_ls(AVMERGE_FOLDER)
         # Enable show me the money
+        #return redirect(url_for('Test'))
         return render_template('Progress.html', data=data, spectimages=spectimages)
 
 @app.route('/Prediction', methods=['GET','POST'])
@@ -219,40 +221,102 @@ def Prediction():
         if config.ConfigVars['MockForFE'] == 0:
             predictionResults = validate_cnn.main()
         else:
-            predictionResults = {'angry': 15, 'sadness': 8, 'Anticipation': 3}
+            predictionResults = {'angry': 15, 'sadness': 18, 'Anticipation': 3}
 
-        with open(RESULTS_FILE, 'w') as fileWr:
-            fileWr.close()
+        totalPredication = 0
+        maxPredict = 'angry'
+        tally = 0
+        for emotion in predictionResults:
+            if tally < predictionResults[emotion]:
+                maxPredict = emotion
+                tally = predictionResults[emotion]
 
-        with open(RESULTS_FILE, 'w') as pred:
-            for emotion in predictionResults:
-                pred.write(emotion + ',' + str(predictionResults[emotion]))
-                pred.close
+            totalPredication += predictionResults[emotion]
+        totalPredication = tally
+        confidence = tally / totalPredication * 100
+        #
+        # with open(RESULTS_FILE, 'w') as fileWr:
+        #     fileWr.close()
+        #
+        # with open(RESULTS_FILE, 'w') as pred:
+        #     for emotion in predictionResults:
+        #         pred.write(emotion + ',' + str(predictionResults[emotion]))
+        #         pred.close
+        #
+        # print (str(predictionResults))
 
-        print (str(predictionResults))
-
-        return redirect(url_for('Prediction'))
+        return render_template('test.html',confidence=confidence, finalEmotion=maxPredict)
     else:
-        log('Prediction GET')
-        # Using DATA_FILE and final prediction from model, show js frontend
-        data = None
 
-        log('Reading ' + DATA_FILE + ' for progress data')
-        with open(DATA_FILE, 'r') as datFile:
-            data = datFile.readlines()
-            datFile.close()
+        if True:
+            log('Prediction POST')
+            # Most likely unused
+            #clear dest dirFiles
+            if config.ConfigVars['MockForFE'] == 0:
+                directory = '/home/ubuntu/workspace/emai/data/validation_data'
+                if os.path.exists(directory):
+                    shutil.rmtree(directory)
+                    os.makedirs(directory)
+                else:
+                    os.makedirs(directory)
 
-        finalPrediction = None
-        log('Reading ' + RESULTS_FILE + ' for final prediction data')
-        with open (RESULTS_FILE, 'r') as finFile:
-            finalPrediction = finFile.readlines()
-            finFile.close()
+                copytree(AVMERGE_FOLDER, directory)
 
-        spectimages = sorted_ls(AVMERGE_FOLDER)
+            #run prediction
+            if config.ConfigVars['MockForFE'] == 0:
+                predictionResults = validate_cnn.main()
+            else:
+                predictionResults = {'angry': 15, 'sadness': 18, 'Anticipation': 3}
 
-        log('Rendering progress and final analysis data')
-        # Newly populated X folder
-        return render_template('Prediction.html', data=data, finalPrediction=finalPrediction, spectimages=spectimages)
+            totalPredication = 0
+            maxPredict = 'angry'
+            tally = 0
+            for emotion in predictionResults:
+                if tally < predictionResults[emotion]:
+                    maxPredict = emotion
+                    tally = predictionResults[emotion]
+
+                totalPredication += predictionResults[emotion]
+
+            confidence = tally / totalPredication * 100
+            #
+            # with open(RESULTS_FILE, 'w') as fileWr:
+            #     fileWr.close()
+            #
+            # with open(RESULTS_FILE, 'w') as pred:
+            #     for emotion in predictionResults:
+            #         pred.write(emotion + ',' + str(predictionResults[emotion]))
+            #         pred.close
+            #
+            # print (str(predictionResults))
+
+            spectimages = sorted_ls(AVMERGE_FOLDER)
+            specs = sorted_ls(AUDIOSPEC_FOLDER)
+            vids = sorted_ls(VIDEO_UPLOAD_FOLDER)
+
+            return render_template('test.html',confidence=confidence, finalEmotion=maxPredict,texturesVid=vids, texturesSpec=specs,texturesMerg=spectimages)
+        else:
+
+            log('Prediction GET')
+            # Using DATA_FILE and final prediction from model, show js frontend
+            data = None
+
+            log('Reading ' + DATA_FILE + ' for progress data')
+            with open(DATA_FILE, 'r') as datFile:
+                data = datFile.readlines()
+                datFile.close()
+
+            finalPrediction = None
+            log('Reading ' + RESULTS_FILE + ' for final prediction data')
+            with open (RESULTS_FILE, 'r') as finFile:
+                finalPrediction = finFile.readlines()
+                finFile.close()
+
+            spectimages = sorted_ls(AVMERGE_FOLDER)
+
+            log('Rendering progress and final analysis data')
+            # Newly populated X folder
+            return render_template('Prediction.html', data=data, finalPrediction=finalPrediction, spectimages=spectimages)
 
 @app.route('/PastRuns', methods=['GET','POST'])
 def PastRuns():
@@ -311,6 +375,18 @@ def Test():
         vids = sorted_ls(VIDEO_UPLOAD_FOLDER)
         print (spectimages)
         return render_template('test.html',texturesVid=vids, texturesSpec=specs,texturesMerg=spectimages)
+
+@app.after_request
+def add_header(r):
+    """
+    Add headers to both force latest IE rendering engine or Chrome Frame,
+    and also to cache the rendered page for 10 minutes.
+    """
+    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    r.headers["Pragma"] = "no-cache"
+    r.headers["Expires"] = "0"
+    r.headers['Cache-Control'] = 'public, max-age=0'
+    return r
 
 #######################################
 # Utility methods
