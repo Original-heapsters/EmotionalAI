@@ -306,7 +306,11 @@ def Test():
     else:
         log('PastRuns GET')
         # Show all past runs that canbe viewed with their appropriate *ID*'s'
-        return render_template('test.html')
+        spectimages = sorted_ls(AVMERGE_FOLDER)
+        specs = sorted_ls(AUDIOSPEC_FOLDER)
+        vids = sorted_ls(VIDEO_UPLOAD_FOLDER)
+        print (spectimages)
+        return render_template('test.html',texturesVid=vids, texturesSpec=specs,texturesMerg=spectimages)
 
 #######################################
 # Utility methods
