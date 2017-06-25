@@ -7,7 +7,9 @@ import urllib.request
 from shutil import copyfile
 from flask import Flask, render_template, request, url_for, redirect
 from werkzeug.utils import secure_filename
-from workspace.eami import validate_cnn
+import sys
+sys.path.append('../../workspace/emai')
+import validate_cnn
 
 app = Flask(__name__)
 
