@@ -7,6 +7,6 @@ static/Prediction/*
 static/VideoFiles/*
 static/VideoFrames/*
 static/AVMerge/*
-static/AduioSpec/*
+static/AudioSpec/*
 static/AudioFull/*
 static/VideoFull/*
