@@ -82,6 +82,8 @@ if os.path.isdir(PLOTS_FOLDER) is False:
 if os.path.isdir(ASSETS) is False:
     os.makedirs(ASSETS)
 
+predictor = validate()
+
 #######################################
 # Routing
 #######################################
@@ -220,7 +222,7 @@ def Prediction():
 
         #run prediction
         if config.ConfigVars['MockForFE'] == 0:
-            predictionResults = validate.predict()
+            predictionResults = predictor.predict()
         else:
             predictionResults = {'angry': 15, 'sadness': 18, 'Anticipation': 3}
 
@@ -265,7 +267,7 @@ def Prediction():
 
             #run prediction
             if config.ConfigVars['MockForFE'] == 0:
-                predictionResults = validate.predict()
+                predictionResults = predictor.predict()
             else:
                 predictionResults = {'angry': 15, 'sadness': 18, 'Anticipation': 3}
 
