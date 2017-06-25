@@ -1,2 +1,1 @@
-happy,sad,angry,frustrated
-.89,.12,.05,.01
+Fear,1Anger,3Sadness,65Surprise,1Joy,2Anticipation,5Trust,2Disgust,1

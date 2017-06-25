@@ -96,7 +96,7 @@ class VideoOperations:
 
     def generateSpectroShizz(self):
         output = self.outputAudio + '../AVMerge/'
-        if len(os.listdir(output) > 0):
+        if len(os.listdir(output)) > 0:
             os.system('rm ' + output + '*.jpg')
         for wf in self.sorted_ls(self.outputAudio + '../AudioFull'):
             try:

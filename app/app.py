@@ -222,13 +222,13 @@ def Prediction():
             fileWr.close()
 
         with open(RESULTS_FILE, 'w') as pred:
-            for emotion, confidence in predictionResults:
-                pred.write(emotion + ',' + confidence)
+            for emotion in predictionResults:
+                pred.write(emotion + ',' + str(predictionResults[emotion]))
                 pred.close
 
         print (str(predictionResults))
 
-        return redirect(url_for('Prediction.html'))
+        return redirect(url_for('Prediction'))
     else:
         log('Prediction GET')
         # Using DATA_FILE and final prediction from model, show js frontend
