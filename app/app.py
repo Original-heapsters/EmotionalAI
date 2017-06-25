@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 if config.ConfigVars['MockForFE'] == 0:
     import sys
     sys.path.append('../../workspace/emai')
-    import validate_cnn
+   from validate_cnn import validate
 
 app = Flask(__name__)
 
@@ -220,7 +220,7 @@ def Prediction():
 
         #run prediction
         if config.ConfigVars['MockForFE'] == 0:
-            predictionResults = validate_cnn.main()
+            predictionResults = validate.predict()
         else:
             predictionResults = {'angry': 15, 'sadness': 18, 'Anticipation': 3}
 
@@ -265,7 +265,7 @@ def Prediction():
 
             #run prediction
             if config.ConfigVars['MockForFE'] == 0:
-                predictionResults = validate_cnn.main()
+                predictionResults = validate.predict()
             else:
                 predictionResults = {'angry': 15, 'sadness': 18, 'Anticipation': 3}
 
