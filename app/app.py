@@ -17,6 +17,8 @@ VIDEOFULL_UPLOAD_FOLDER = 'static/VideoFull/'
 VIDEO_UPLOAD_FOLDER = 'static/VideoFiles/'
 AUDIOFULL_FOLDER = 'static/AudioFull/'
 AUDIO_FOLDER = 'static/AudioFiles/'
+AUDIOSPEC_FOLDER = 'static/AudioSpec/'
+AVMERGE_FOLDER = 'static/AVMerge/'
 FRAMES_FOLDER = 'static/VideoFrames/'
 PREDICTION_FOLDER = 'static/Prediction/'
 PLOTS_FOLDER = 'static/Plots/'
@@ -35,6 +37,8 @@ app.config['VIDEOFULL_UPLOAD_FOLDER'] = VIDEOFULL_UPLOAD_FOLDER
 app.config['VIDEO_UPLOAD_FOLDER'] = VIDEO_UPLOAD_FOLDER
 app.config['AUDIOFULL_FOLDER'] = AUDIOFULL_FOLDER
 app.config['AUDIO_FOLDER'] = AUDIO_FOLDER
+app.config['AUDIOSPEC_FOLDER'] = AUDIOSPEC_FOLDER
+app.config['AVMERGE_FOLDER'] = AVMERGE_FOLDER
 app.config['FRAMES_FOLDER'] = FRAMES_FOLDER
 app.config['PREDICTION_FOLDER'] = PREDICTION_FOLDER
 app.config['PLOTS_FOLDER'] = PLOTS_FOLDER
@@ -54,6 +58,12 @@ if os.path.isdir(AUDIOFULL_FOLDER) is False:
 
 if os.path.isdir(AUDIO_FOLDER) is False:
     os.makedirs(AUDIO_FOLDER)
+
+if os.path.isdir(AUDIOSPEC_FOLDER) is False:
+    os.makedirs(AUDIOSPEC_FOLDER)
+
+if os.path.isdir(AVMERGE_FOLDER) is False:
+    os.makedirs(AVMERGE_FOLDER)
 
 if os.path.isdir(FRAMES_FOLDER) is False:
     os.makedirs(FRAMES_FOLDER)
@@ -176,8 +186,10 @@ def Progress():
             datFile.close()
 
         log('Rendering progress data')
+
+        spectimages = sorted_ls(AVMERGE_FOLDER)
         # Enable show me the money
-        return render_template('Progress.html', data=data)
+        return render_template('Progress.html', data=data, spectimages=spectimages)
 
 @app.route('/Prediction', methods=['GET','POST'])
 def Prediction():
@@ -208,9 +220,11 @@ def Prediction():
             finalPrediction = finFile.readlines()
             finFile.close()
 
+        spectimages = sorted_ls(AVMERGE_FOLDER)
+
         log('Rendering progress and final analysis data')
         # Newly populated X folder
-        return render_template('Prediction.html', data=data, finalPrediction=finalPrediction)
+        return render_template('Prediction.html', data=data, finalPrediction=finalPrediction, spectimages=spectimages)
 
 @app.route('/PastRuns', methods=['GET','POST'])
 def PastRuns():
@@ -343,6 +357,10 @@ def doPrediction():
 
     log('Done with prediction')
     return True
+
+def sorted_ls(path):
+    dirFiles = sorted(os.listdir(path), key=lambda x: int(x.split('.')[0]))
+    return dirFiles
 
 #######################################
 # Running

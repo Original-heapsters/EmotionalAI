@@ -73,9 +73,9 @@ class VideoOperations:
                 else:
                     counter += 1
 
-        count = 0
+        count = 0000
         for vidFrame in self.sorted_ls(videoFramesDir):
-            os.system('mv ' + os.path.join(self.outputPath,vidFrame) + ' ' +  os.path.join(self.outputPath,str(count) + '.jpg'))
+            os.system('mv ' + os.path.join(self.outputPath,vidFrame) + ' ' +  os.path.join(self.outputPath,str(count)+'.jpg'))
             count += 1
 
 
@@ -85,22 +85,24 @@ class VideoOperations:
 
     def getAudio(self):
         os.system('rm ' + self.outputAudio + '../AudioFull/*.wav')
+        os.system('rm ' + self.outputAudio + '../AudioSpec/*.png')
         spa.split(self.outputAudio + 'audio.wav',self.outputAudio + '../AudioFull/',timestep=(self.duration/self.desiredFrames)*1000)
-        count = 0
+        count = 0000
         for audioFrame in self.sorted_ls(self.outputAudio + '../AudioFull/'):
-            os.system('mv ' + os.path.join(self.outputAudio + '../AudioFull/',audioFrame) + ' ' +  os.path.join(self.outputAudio + '../AudioFull/',str(count) + '.wav'))
+            os.system('mv ' + os.path.join(self.outputAudio + '../AudioFull/',audioFrame) + ' ' +  os.path.join(self.outputAudio + '../AudioFull/'+str(count)+'.wav'))
             count += 1
         return True
 
     def generateSpectroShizz(self):
         output = self.outputAudio + '../AVMerge/'
+        os.system('rm ' + output + '*.jpg')
         for wf in self.sorted_ls(self.outputAudio + '../AudioFull'):
             wf = os.path.join(self.outputAudio + '../AudioFull', wf)
             #a2s.graph_spectrogram(wf,dest4+os.path.basename(wf).split('.')[0])
             a2s.plotstft(wf, plotpath=self.outputAudio + '../AudioSpec/' + os.path.basename(wf).split('.')[0])
             imcat.concat(self.outputPath+os.path.basename(wf).split('.')[0]+'.jpg',\
                          self.outputAudio + '../AudioSpec/'+os.path.basename(wf).split('.')[0]+'.png',\
-                         output+os.path.basename(wf).split('.')[0])
+                         output+'00'+os.path.basename(wf).split('.')[0])
 
     def getLength(self):
         duration = subprocess.check_output(['ffprobe', '-i', self.inputVideo, '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=%s' % ("p=0")])
