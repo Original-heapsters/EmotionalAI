@@ -2,7 +2,9 @@ import os
 import json
 import config
 #import youtube_dl
+import VideoOperations
 import urllib.request
+from shutil import copyfile
 from flask import Flask, render_template, request, url_for, redirect
 from werkzeug.utils import secure_filename
 
@@ -11,7 +13,9 @@ app = Flask(__name__)
 #######################################
 # Constants
 #######################################
+VIDEOFULL_UPLOAD_FOLDER = 'static/VideoFull/'
 VIDEO_UPLOAD_FOLDER = 'static/VideoFiles/'
+AUDIOFULL_FOLDER = 'static/AudioFull/'
 AUDIO_FOLDER = 'static/AudioFiles/'
 FRAMES_FOLDER = 'static/VideoFrames/'
 PREDICTION_FOLDER = 'static/Prediction/'
@@ -27,7 +31,9 @@ ALLOWED_EXTENSIONS = set(['mp4'])
 #######################################
 # Configuration
 #######################################
+app.config['VIDEOFULL_UPLOAD_FOLDER'] = VIDEOFULL_UPLOAD_FOLDER
 app.config['VIDEO_UPLOAD_FOLDER'] = VIDEO_UPLOAD_FOLDER
+app.config['AUDIOFULL_FOLDER'] = AUDIOFULL_FOLDER
 app.config['AUDIO_FOLDER'] = AUDIO_FOLDER
 app.config['FRAMES_FOLDER'] = FRAMES_FOLDER
 app.config['PREDICTION_FOLDER'] = PREDICTION_FOLDER
@@ -37,8 +43,14 @@ app.config['ASSETS'] = ASSETS
 #######################################
 # Setup
 #######################################
+if os.path.isdir(VIDEOFULL_UPLOAD_FOLDER) is False:
+    os.makedirs(VIDEOFULL_UPLOAD_FOLDER)
+
 if os.path.isdir(VIDEO_UPLOAD_FOLDER) is False:
     os.makedirs(VIDEO_UPLOAD_FOLDER)
+
+if os.path.isdir(AUDIOFULL_FOLDER) is False:
+    os.makedirs(AUDIOFULL_FOLDER)
 
 if os.path.isdir(AUDIO_FOLDER) is False:
     os.makedirs(AUDIO_FOLDER)
@@ -246,6 +258,16 @@ def processVideo(inputPath):
     '''
     log('Running PreProcessing on ' + inputPath)
 
+    # Save full version of video
+    fullVideoPath = saveFullVideoInDir(inputPath)
+    os.system('rm '+ VIDEO_UPLOAD_FOLDER+'*.mp4')
+
+    vOpt = VideoOperations.VideoOperations(desiredFrames=config.ConfigVars['DesiredFrames'],inputVideo=fullVideoPath,outputPath=VIDEO_UPLOAD_FOLDER, outputAudio=AUDIO_FOLDER)
+    vOpt.getVideoFrames()
+    vOpt.getChunks(VIDEO_UPLOAD_FOLDER)
+    vOpt.getAudio()
+    vOpt.generateSpectroShizz()
+
     videoFile = None
     return videoFile
 
@@ -266,6 +288,17 @@ def saveVideoInDir(vid):
     vid.save(fileDest)
 
     return fileDest
+
+def saveFullVideoInDir(vid):
+    log('Saving ' + vid+ ' to ' + VIDEOFULL_UPLOAD_FOLDER)
+
+    copyfile(vid, app.config['VIDEOFULL_UPLOAD_FOLDER'] + 'full.mp4')
+    path = os.path.join('.',VIDEOFULL_UPLOAD_FOLDER + 'full.mp4')
+    # filename = secure_filename(vid.filename)
+    # fileDest = os.path.join(app.config['VIDEOFULL_UPLOAD_FOLDER'], filename)
+    # vid.save(fileDest)
+
+    return path
 
 def downloadVideo(videoURL):
     '''
