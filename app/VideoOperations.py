@@ -96,15 +96,18 @@ class VideoOperations:
 
     def generateSpectroShizz(self):
         output = self.outputAudio + '../AVMerge/'
-        os.system('rm ' + output + '*.jpg')
+        if len(os.listdir(output) > 0):
+            os.system('rm ' + output + '*.jpg')
         for wf in self.sorted_ls(self.outputAudio + '../AudioFull'):
-            wf = os.path.join(self.outputAudio + '../AudioFull', wf)
-            if os.path.exists(wf) and os.path.exists(self.outputPath+os.path.basename(wf).split('.')[0]+'.jpg') and os.path.exists(self.outputAudio + '../AudioSpec/'+os.path.basename(wf).split('.')[0]+'.png'):
+            try:
+                wf = os.path.join(self.outputAudio + '../AudioFull', wf)
                 #a2s.graph_spectrogram(wf,dest4+os.path.basename(wf).split('.')[0])
                 a2s.plotstft(wf, plotpath=self.outputAudio + '../AudioSpec/' + os.path.basename(wf).split('.')[0])
                 imcat.concat(self.outputPath+os.path.basename(wf).split('.')[0]+'.jpg',\
                              self.outputAudio + '../AudioSpec/'+os.path.basename(wf).split('.')[0]+'.png',\
                              output+'00'+os.path.basename(wf).split('.')[0])
+            except:
+                pass
 
     def getLength(self):
         duration = subprocess.check_output(['ffprobe', '-i', self.inputVideo, '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=%s' % ("p=0")])
