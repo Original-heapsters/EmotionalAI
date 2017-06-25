@@ -1,12 +1,13 @@
 import os
 import json
 import config
-#import youtube_dl
+import shutil
 import VideoOperations
 import urllib.request
 from shutil import copyfile
 from flask import Flask, render_template, request, url_for, redirect
 from werkzeug.utils import secure_filename
+from workspace.eami import validate_cnn
 
 app = Flask(__name__)
 
@@ -202,6 +203,20 @@ def Prediction():
     if request.method == 'POST':
         log('Prediction POST')
         # Most likely unused
+        #clear dest dirFiles
+        directory = '/home/ubuntu/workspace/emai/data/validation_data'
+        if os.path.exists(directory):
+            shutil.rmtree(directory)
+            os.makedirs(directory)
+        else:
+            os.makedirs(directory)
+
+        copytree(AVMERGE_FOLDER, directory)
+
+        #run prediction
+        predictionResults = validate_cnn.main()
+
+        print (str(predictionResults))
 
         return render_template('Prediction.html')
     else:
@@ -388,6 +403,15 @@ def doPrediction():
 def sorted_ls(path):
     dirFiles = sorted(os.listdir(path), key=lambda x: int(x.split('.')[0]))
     return dirFiles
+
+def copytree(src, dst, symlinks=False, ignore=None):
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
+        else:
+            shutil.copy2(s, d)
 
 #######################################
 # Running
