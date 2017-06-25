@@ -12,6 +12,11 @@ if config.ConfigVars['MockForFE'] == 0:
     sys.path.append('../../workspace/emai')
     from validate_cnn import validate
 
+
+
+if config.ConfigVars['MockForFE'] == 0:
+    predictor = None
+
 app = Flask(__name__)
 
 #######################################
@@ -82,8 +87,6 @@ if os.path.isdir(PLOTS_FOLDER) is False:
 if os.path.isdir(ASSETS) is False:
     os.makedirs(ASSETS)
 
-if config.ConfigVars['MockForFE'] == 0:
-    predictor = validate()
 
 #######################################
 # Routing
@@ -225,6 +228,7 @@ def Prediction():
 
         #run prediction
         if config.ConfigVars['MockForFE'] == 0:
+
             predictionResults = predictor.predict()
         else:
             predictionResults = {'angry': 15, 'sadness': 18, 'Anticipation': 3}
@@ -516,4 +520,7 @@ def copytree(src, dst, symlinks=False, ignore=None):
 # Running
 #######################################
 if __name__ == '__main__':
+    if config.ConfigVars['MockForFE'] == 0:
+        predictor = validate()
+
     app.run(debug=True, host='0.0.0.0')
