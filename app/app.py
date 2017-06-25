@@ -225,7 +225,7 @@ def Prediction():
 
         print (str(predictionResults))
 
-        return render_template('Prediction.html')
+        return redirect(url_for('Prediction.html'))
     else:
         log('Prediction GET')
         # Using DATA_FILE and final prediction from model, show js frontend

@@ -99,11 +99,12 @@ class VideoOperations:
         os.system('rm ' + output + '*.jpg')
         for wf in self.sorted_ls(self.outputAudio + '../AudioFull'):
             wf = os.path.join(self.outputAudio + '../AudioFull', wf)
-            #a2s.graph_spectrogram(wf,dest4+os.path.basename(wf).split('.')[0])
-            a2s.plotstft(wf, plotpath=self.outputAudio + '../AudioSpec/' + os.path.basename(wf).split('.')[0])
-            imcat.concat(self.outputPath+os.path.basename(wf).split('.')[0]+'.jpg',\
-                         self.outputAudio + '../AudioSpec/'+os.path.basename(wf).split('.')[0]+'.png',\
-                         output+'00'+os.path.basename(wf).split('.')[0])
+            if os.path.exists(wf):
+                #a2s.graph_spectrogram(wf,dest4+os.path.basename(wf).split('.')[0])
+                a2s.plotstft(wf, plotpath=self.outputAudio + '../AudioSpec/' + os.path.basename(wf).split('.')[0])
+                imcat.concat(self.outputPath+os.path.basename(wf).split('.')[0]+'.jpg',\
+                             self.outputAudio + '../AudioSpec/'+os.path.basename(wf).split('.')[0]+'.png',\
+                             output+'00'+os.path.basename(wf).split('.')[0])
 
     def getLength(self):
         duration = subprocess.check_output(['ffprobe', '-i', self.inputVideo, '-show_entries', 'format=duration', '-v', 'quiet', '-of', 'csv=%s' % ("p=0")])
