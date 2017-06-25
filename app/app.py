@@ -253,6 +253,33 @@ def PastRuns():
         # Show all past runs that canbe viewed with their appropriate *ID*'s'
         return render_template('PastRuns.html')
 
+@app.route('/Test', methods=['GET','POST'])
+def Test():
+    '''
+    *STRETCH*
+    GET
+        past runs and be able to display their
+        progress and final predication on demand
+    POST
+        Replace current DATA_FILE and RESULTS_FILE
+        with selected run's files and redirect to progress view
+    '''
+    if request.method == 'POST':
+        log('PastRuns POST')
+        # After selecting a past run, take its results files to be able to regen the progress and prediction screens
+
+        # Copy particular run's *ID*_DATA_FILE to DATA_FILE
+
+        # Copy particular run's *ID*_RESULTS_FILE to RESULTS_FILE
+
+        # Redirect to Progress
+
+        return 'Hello'#render_template('PastRuns.html')
+    else:
+        log('PastRuns GET')
+        # Show all past runs that canbe viewed with their appropriate *ID*'s'
+        return render_template('test.html')
+
 #######################################
 # Utility methods
 #######################################
