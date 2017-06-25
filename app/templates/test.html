@@ -720,9 +720,14 @@ scene.add(TorusMesh);
 
 
       window.onload=function showEmoji(){
-      	var value='{{finalEmotion}}';
-        console.log('emotion = ' + value);
-        console.log('Confidence = {{confidence}}');
+        {% if finalEmotion is defined %}
+        	var value='{{finalEmotion}}';
+          console.log('emotion = ' + value);
+          console.log('Confidence = {{confidence}}');
+        {% else %}
+          var value='sadness'
+          console.log('No emoji to show, showing sadness')
+        {% endif %}
       	//value='angry';
       	if (value == 'angry'){
       		femoji_anger();
