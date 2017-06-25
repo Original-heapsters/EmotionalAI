@@ -216,6 +216,13 @@ def Prediction():
         #run prediction
         predictionResults = validate_cnn.main()
 
+        with open(RESULTS_FILE, 'w').close()
+
+        with open(RESULTS_FILE, 'w') as pred:
+            for emotion, confidence in predictionResults:
+                pred.write(emotion + ',' + confidence)
+                pred.close
+
         print (str(predictionResults))
 
         return render_template('Prediction.html')
