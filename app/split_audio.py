@@ -1,3 +1,4 @@
+import config
 from pydub import AudioSegment
 from pydub.utils import make_chunks
 #import sys
@@ -11,9 +12,9 @@ def split(wav_file,out_name,timestep=1000):
     #import pdb;pdb.set_trace()
     chunks = make_chunks(myaudio, chunk_length_ms) #Make chunks of one sec
     print ('chunks = ' + str(len(chunks)))
-    if len(chunks) == 41:
+    if len(chunks) == config.ConfigVars['DesiredFrames'] + 1:
         chunks.pop()
-    elif len(chunks)<40:
+    elif len(chunks)<config.ConfigVars['DesiredFrames']:
         print('Too few chunks')
         return
 
