@@ -591,15 +591,17 @@ scene.add(TorusMesh);
 	// create a canvas element
 	var canvas1 = document.createElement('canvas');
 	var context1 = canvas1.getContext('2d');
-	context1.font = "Bold 40px Arial";
+	context1.font = "Bold 30px Arial";
 	context1.fillStyle = 'rgb(' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ',' + (Math.floor(Math.random() * 256)) + ')';
 
-    context1.fillText('Kiwi World!', 10, 25);
+    context1.fillText('Confidence: {{confidence}}%!', 10, 25);
 
     textpivot = new THREE.Object3D();
     textpivot.position.set(0, 0, 0);
+
 	textpivot.add( context1 );
 	scene.add( textpivot );
+
 
 	// canvas contents will be used for a texture
 	var texture1 = new THREE.Texture(canvas1)
@@ -613,7 +615,9 @@ scene.add(TorusMesh);
         material1
       );
 	mesh1.position.set(0,50,0);
+  {% if finalEmotion is defined %}
 	scene.add( mesh1 );
+  {% endif %}
 
 	/////// draw image on canvas /////////
 
@@ -725,7 +729,7 @@ scene.add(TorusMesh);
           console.log('emotion = ' + value);
           console.log('Confidence = {{confidence}}');
         {% else %}
-          var value='sadness'
+          var value='NOTHING'
           console.log('No emoji to show, showing sadness')
         {% endif %}
       	//value='angry';

@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 if config.ConfigVars['MockForFE'] == 0:
     import sys
     sys.path.append('../../workspace/emai')
-   from validate_cnn import validate
+    from validate_cnn import validate
 
 app = Flask(__name__)
 
