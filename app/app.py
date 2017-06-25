@@ -7,9 +7,9 @@ import urllib.request
 from shutil import copyfile
 from flask import Flask, render_template, request, url_for, redirect
 from werkzeug.utils import secure_filename
-import sys
-sys.path.append('../../workspace/emai')
-import validate_cnn
+# import sys
+# sys.path.append('../../workspace/emai')
+# import validate_cnn
 
 app = Flask(__name__)
 
@@ -216,7 +216,10 @@ def Prediction():
         copytree(AVMERGE_FOLDER, directory)
 
         #run prediction
-        predictionResults = validate_cnn.main()
+        if config.ConfigVars['MockForFE'] == 0:
+            predictionResults = validate_cnn.main()
+        else:
+            predictionResults = {'angry': 15, 'sadness': 8, 'Anticipation': 3}
 
         with open(RESULTS_FILE, 'w') as fileWr:
             fileWr.close()
